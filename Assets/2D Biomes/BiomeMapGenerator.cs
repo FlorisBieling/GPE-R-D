@@ -5,6 +5,9 @@ public class BiomeMapGenerator : MonoBehaviour
     public const int Ocean = 0;
     public const int Land = 1;
 
+    public const int Cold = 0;
+    public const int Warm = 1;
+
     [SerializeField] private int seed = 12345;
 
     private System.Random random;
@@ -41,6 +44,7 @@ public class BiomeMapGenerator : MonoBehaviour
             for (int x = 0; x < source.Width; x++)
             {
                 int value = source.GetCell(x, y);
+                int temperature = source.GetTemperature(x, y);
 
                 int newX = x * 2;
                 int newY = y * 2;
@@ -49,6 +53,11 @@ public class BiomeMapGenerator : MonoBehaviour
                 result.SetCell(newX + 1, newY, value);
                 result.SetCell(newX, newY + 1, value);
                 result.SetCell(newX + 1, newY + 1, value);
+
+                result.SetTemperature(newX, newY, temperature);
+                result.SetTemperature(newX + 1, newY, temperature);
+                result.SetTemperature(newX, newY + 1, temperature);
+                result.SetTemperature(newX + 1, newY + 1, temperature);
             }
         }
 
@@ -64,6 +73,8 @@ public class BiomeMapGenerator : MonoBehaviour
             for (int x = 0; x < source.Width; x++)
             {
                 int current = source.GetCell(x, y);
+                int temperature = source.GetTemperature(x, y);
+
                 bool touchesLand = HasNeighborOfType(source, x, y, Land);
                 bool touchesOcean = HasNeighborOfType(source, x, y, Ocean);
 
@@ -79,6 +90,61 @@ public class BiomeMapGenerator : MonoBehaviour
                 {
                     result.SetCell(x, y, current);
                 }
+
+                result.SetTemperature(x, y, temperature);
+            }
+        }
+
+        return result;
+    }
+
+    public MapData AddIslandsInOpenOcean(MapData source)
+    {
+        MapData result = new MapData(source.Width, source.Height);
+
+        for (int y = 0; y < source.Height; y++)
+        {
+            for (int x = 0; x < source.Width; x++)
+            {
+                int current = source.GetCell(x, y);
+                int temperature = source.GetTemperature(x, y);
+
+                if (current != Ocean)
+                {
+                    result.SetCell(x, y, current);
+                    result.SetTemperature(x, y, temperature);
+                    continue;
+                }
+
+                if (IsSurroundedByOcean4Directions(source, x, y))
+                {
+                    result.SetCell(x, y, random.NextDouble() < 0.50 ? Land : Ocean);
+                }
+                else
+                {
+                    result.SetCell(x, y, Ocean);
+                }
+
+                result.SetTemperature(x, y, temperature);
+            }
+        }
+
+        return result;
+    }
+
+    public MapData GenerateTemperatures(MapData source)
+    {
+        MapData result = new MapData(source.Width, source.Height);
+
+        for (int y = 0; y < source.Height; y++)
+        {
+            for (int x = 0; x < source.Width; x++)
+            {
+                int cell = source.GetCell(x, y);
+                int temperature = random.NextDouble() < 0.5 ? Cold : Warm;
+
+                result.SetCell(x, y, cell);
+                result.SetTemperature(x, y, temperature);
             }
         }
 
@@ -114,35 +180,6 @@ public class BiomeMapGenerator : MonoBehaviour
         return false;
     }
 
-    public MapData AddIslandsInOpenOcean(MapData source)
-    {
-        MapData result = new MapData(source.Width, source.Height);
-
-        for (int y = 0; y < source.Height; y++)
-        {
-            for (int x = 0; x < source.Width; x++)
-            {
-                int current = source.GetCell(x, y);
-
-                if (current != Ocean)
-                {
-                    result.SetCell(x, y, current);
-                    continue;
-                }
-
-                if (IsSurroundedByOcean4Directions(source, x, y))
-                {
-                    result.SetCell(x, y, random.NextDouble() < 0.50 ? Land : Ocean);
-                }
-                else
-                {
-                    result.SetCell(x, y, Ocean);
-                }
-            }
-        }
-
-        return result;
-    }
     private bool IsSurroundedByOcean4Directions(MapData map, int x, int y)
     {
         if (x <= 0 || x >= map.Width - 1 || y <= 0 || y >= map.Height - 1)

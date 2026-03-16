@@ -2,12 +2,18 @@ using UnityEngine;
 
 public class TextureMapVisualizer : MonoBehaviour
 {
+    public enum MapDisplayMode
+    {
+        LandOcean,
+        Temperature
+    }
+
     [SerializeField] private Renderer targetRenderer;
     [SerializeField] private int pixelsPerCell = 16;
 
     private Texture2D currentTexture;
 
-    public void Draw(MapData map)
+    public void Draw(MapData map, MapDisplayMode displayMode)
     {
         int textureWidth = map.Width * pixelsPerCell;
         int textureHeight = map.Height * pixelsPerCell;
@@ -20,8 +26,8 @@ public class TextureMapVisualizer : MonoBehaviour
         {
             for (int x = 0; x < map.Width; x++)
             {
-                Color color = GetColor(map.GetCell(x, y));
-                FillCell(x, y, color, currentTexture, map.Height);
+                Color color = GetColor(map, x, y, displayMode);
+                FillCell(x, y, color, currentTexture);
             }
         }
 
@@ -31,7 +37,7 @@ public class TextureMapVisualizer : MonoBehaviour
         transform.localScale = new Vector3(map.Width, 1f, map.Height);
     }
 
-    private void FillCell(int cellX, int cellY, Color color, Texture2D texture, int mapHeight)
+    private void FillCell(int cellX, int cellY, Color color, Texture2D texture)
     {
         int startX = cellX * pixelsPerCell;
         int startY = cellY * pixelsPerCell;
@@ -45,12 +51,22 @@ public class TextureMapVisualizer : MonoBehaviour
         }
     }
 
-    private Color GetColor(int value)
+    private Color GetColor(MapData map, int x, int y, MapDisplayMode displayMode)
     {
-        return value switch
+        if (displayMode == MapDisplayMode.LandOcean)
         {
-            BiomeMapGenerator.Ocean => new Color(0.1f, 0.4f, 0.9f),
-            BiomeMapGenerator.Land => new Color(0.2f, 0.7f, 0.2f),
+            return map.GetCell(x, y) switch
+            {
+                BiomeMapGenerator.Ocean => new Color(0.1f, 0.4f, 0.9f),
+                BiomeMapGenerator.Land => new Color(0.2f, 0.7f, 0.2f),
+                _ => Color.magenta
+            };
+        }
+
+        return map.GetTemperature(x, y) switch
+        {
+            BiomeMapGenerator.Cold => new Color(0.3f, 0.9f, 1f),
+            BiomeMapGenerator.Warm => new Color(1f, 0.35f, 0.2f),
             _ => Color.magenta
         };
     }

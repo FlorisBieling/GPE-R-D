@@ -7,11 +7,12 @@ public class MapController : MonoBehaviour
     [SerializeField] private TextureMapVisualizer visualizer;
 
     private MapData currentMap;
+    private TextureMapVisualizer.MapDisplayMode currentDisplayMode = TextureMapVisualizer.MapDisplayMode.LandOcean;
 
     private void Start()
     {
         currentMap = generator.GenerateInitialMap(4, 4, 0.10f);
-        visualizer.Draw(currentMap);
+        Redraw();
     }
 
     private void Update()
@@ -19,25 +20,25 @@ public class MapController : MonoBehaviour
         if (Keyboard.current.digit1Key.wasPressedThisFrame)
         {
             currentMap = generator.GenerateInitialMap(4, 4, 0.10f);
-            visualizer.Draw(currentMap);
+            Redraw();
         }
 
         if (Keyboard.current.digit2Key.wasPressedThisFrame)
         {
             currentMap = generator.Subdivide(currentMap);
-            visualizer.Draw(currentMap);
+            Redraw();
         }
 
         if (Keyboard.current.digit3Key.wasPressedThisFrame)
         {
             currentMap = generator.MutateCoast(currentMap);
-            visualizer.Draw(currentMap);
+            Redraw();
         }
 
         if (Keyboard.current.digit4Key.wasPressedThisFrame)
         {
             currentMap = generator.AddIslandsInOpenOcean(currentMap);
-            visualizer.Draw(currentMap);
+            Redraw();
         }
 
         if (Keyboard.current.digit5Key.wasPressedThisFrame)
@@ -48,12 +49,43 @@ public class MapController : MonoBehaviour
             currentMap = generator.MutateCoast(currentMap);
             currentMap = generator.MutateCoast(currentMap);
             currentMap = generator.AddIslandsInOpenOcean(currentMap);
+            currentMap = generator.GenerateTemperatures(currentMap);
             currentMap = generator.Subdivide(currentMap);
             currentMap = generator.MutateCoast(currentMap);
             currentMap = generator.Subdivide(currentMap);
             currentMap = generator.MutateCoast(currentMap);
 
-            visualizer.Draw(currentMap);
+            Redraw();
         }
+
+        if (Keyboard.current.digit6Key.wasPressedThisFrame)
+        {
+            currentMap = generator.GenerateTemperatures(currentMap);
+            Redraw();
+        }
+
+        if (Keyboard.current.tKey.wasPressedThisFrame)
+        {
+            ToggleDisplayMode();
+        }
+    }
+
+    private void ToggleDisplayMode()
+    {
+        if (currentDisplayMode == TextureMapVisualizer.MapDisplayMode.LandOcean)
+        {
+            currentDisplayMode = TextureMapVisualizer.MapDisplayMode.Temperature;
+        }
+        else
+        {
+            currentDisplayMode = TextureMapVisualizer.MapDisplayMode.LandOcean;
+        }
+
+        Redraw();
+    }
+
+    private void Redraw()
+    {
+        visualizer.Draw(currentMap, currentDisplayMode);
     }
 }
