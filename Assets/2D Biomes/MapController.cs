@@ -36,12 +36,23 @@ public class MapController : MonoBehaviour
 
         if (Keyboard.current.digit4Key.wasPressedThisFrame)
         {
+            currentMap = generator.AddIslandsInOpenOcean(currentMap);
+            visualizer.Draw(currentMap);
+        }
+
+        if (Keyboard.current.digit5Key.wasPressedThisFrame)
+        {
             currentMap = generator.Subdivide(currentMap);
             currentMap = generator.MutateCoast(currentMap);
             currentMap = generator.Subdivide(currentMap);
             currentMap = generator.MutateCoast(currentMap);
             currentMap = generator.MutateCoast(currentMap);
+            currentMap = generator.AddIslandsInOpenOcean(currentMap);
+            currentMap = generator.Subdivide(currentMap);
             currentMap = generator.MutateCoast(currentMap);
+            currentMap = generator.Subdivide(currentMap);
+            currentMap = generator.MutateCoast(currentMap);
+
             visualizer.Draw(currentMap);
         }
     }

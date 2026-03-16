@@ -113,4 +113,46 @@ public class BiomeMapGenerator : MonoBehaviour
 
         return false;
     }
+
+    public MapData AddIslandsInOpenOcean(MapData source)
+    {
+        MapData result = new MapData(source.Width, source.Height);
+
+        for (int y = 0; y < source.Height; y++)
+        {
+            for (int x = 0; x < source.Width; x++)
+            {
+                int current = source.GetCell(x, y);
+
+                if (current != Ocean)
+                {
+                    result.SetCell(x, y, current);
+                    continue;
+                }
+
+                if (IsSurroundedByOcean4Directions(source, x, y))
+                {
+                    result.SetCell(x, y, random.NextDouble() < 0.50 ? Land : Ocean);
+                }
+                else
+                {
+                    result.SetCell(x, y, Ocean);
+                }
+            }
+        }
+
+        return result;
+    }
+    private bool IsSurroundedByOcean4Directions(MapData map, int x, int y)
+    {
+        if (x <= 0 || x >= map.Width - 1 || y <= 0 || y >= map.Height - 1)
+        {
+            return false;
+        }
+
+        return map.GetCell(x, y - 1) == Ocean &&
+               map.GetCell(x, y + 1) == Ocean &&
+               map.GetCell(x - 1, y) == Ocean &&
+               map.GetCell(x + 1, y) == Ocean;
+    }
 }
