@@ -1,7 +1,9 @@
 using UnityEngine;
+using System.Collections;
 
 public static class Noise
 {
+
     public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, int seed, float scale, int octaves, float persistance, float lacunarity, Vector2 offset)
     {
         float[,] noiseMap = new float[mapWidth, mapHeight];
@@ -26,10 +28,12 @@ public static class Noise
         float halfWidth = mapWidth / 2f;
         float halfHeight = mapHeight / 2f;
 
+
         for (int y = 0; y < mapHeight; y++)
         {
             for (int x = 0; x < mapWidth; x++)
             {
+
                 float amplitude = 1;
                 float frequency = 1;
                 float noiseHeight = 0;
@@ -54,8 +58,7 @@ public static class Noise
                 {
                     minNoiseHeight = noiseHeight;
                 }
-
-                noiseMap[y, x] = noiseHeight;
+                noiseMap[x, y] = noiseHeight;
             }
         }
 
@@ -63,10 +66,11 @@ public static class Noise
         {
             for (int x = 0; x < mapWidth; x++)
             {
-                noiseMap[y, x] = Mathf.InverseLerp(minNoiseHeight, maxNoiseHeight, noiseMap[y, x]);
+                noiseMap[x, y] = Mathf.InverseLerp(minNoiseHeight, maxNoiseHeight, noiseMap[x, y]);
             }
         }
 
         return noiseMap;
     }
+
 }
