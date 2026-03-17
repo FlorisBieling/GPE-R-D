@@ -57,16 +57,17 @@ public class TextureMapVisualizer : MonoBehaviour
         {
             return map.GetCell(x, y) switch
             {
-                BiomeMapGenerator.Ocean => new Color(0.1f, 0.4f, 0.9f),
-                BiomeMapGenerator.Land => new Color(0.2f, 0.7f, 0.2f),
+                BiomeMapGenerator.Ocean => Color.blue,
+                BiomeMapGenerator.Land => Color.green,
                 _ => Color.magenta
             };
         }
 
         return map.GetTemperature(x, y) switch
         {
-            BiomeMapGenerator.Cold => new Color(0.3f, 0.9f, 1f),
-            BiomeMapGenerator.Warm => new Color(1f, 0.35f, 0.2f),
+            BiomeMapGenerator.Cold => Color.cyan,
+            BiomeMapGenerator.Moderate => Color.yellow,
+            BiomeMapGenerator.Warm => Color.red,
             _ => Color.magenta
         };
     }

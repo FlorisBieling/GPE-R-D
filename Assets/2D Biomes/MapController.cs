@@ -50,10 +50,13 @@ public class MapController : MonoBehaviour
             currentMap = generator.MutateCoast(currentMap);
             currentMap = generator.AddIslandsInOpenOcean(currentMap);
             currentMap = generator.GenerateTemperatures(currentMap);
+            currentMap = generator.MutateTemperatures(currentMap);
+            currentMap = generator.MutateTemperatures(currentMap);
             currentMap = generator.Subdivide(currentMap);
             currentMap = generator.MutateCoast(currentMap);
             currentMap = generator.Subdivide(currentMap);
             currentMap = generator.MutateCoast(currentMap);
+            currentMap = generator.ModerateTemperatureEdges(currentMap);
 
             Redraw();
         }
@@ -61,6 +64,18 @@ public class MapController : MonoBehaviour
         if (Keyboard.current.digit6Key.wasPressedThisFrame)
         {
             currentMap = generator.GenerateTemperatures(currentMap);
+            Redraw();
+        }
+
+        if (Keyboard.current.digit7Key.wasPressedThisFrame)
+        {
+            currentMap = generator.ModerateTemperatureEdges(currentMap);
+            Redraw();
+        }
+
+        if (Keyboard.current.digit8Key.wasPressedThisFrame)
+        {
+            currentMap = generator.MutateTemperatures(currentMap);
             Redraw();
         }
 

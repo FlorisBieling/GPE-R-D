@@ -6,7 +6,8 @@ public class BiomeMapGenerator : MonoBehaviour
     public const int Land = 1;
 
     public const int Cold = 0;
-    public const int Warm = 1;
+    public const int Moderate = 1;
+    public const int Warm = 2;
 
     [SerializeField] private int seed = 12345;
 
@@ -191,5 +192,95 @@ public class BiomeMapGenerator : MonoBehaviour
                map.GetCell(x, y + 1) == Ocean &&
                map.GetCell(x - 1, y) == Ocean &&
                map.GetCell(x + 1, y) == Ocean;
+    }
+
+    public MapData ModerateTemperatureEdges(MapData source)
+    {
+        MapData result = new MapData(source.Width, source.Height);
+
+        for (int y = 0; y < source.Height; y++)
+        {
+            for (int x = 0; x < source.Width; x++)
+            {
+                int cell = source.GetCell(x, y);
+                int temp = source.GetTemperature(x, y);
+
+                bool touchesCold = HasNeighborTemperature(source, x, y, Cold);
+                bool touchesWarm = HasNeighborTemperature(source, x, y, Warm);
+
+                if (temp == Warm && touchesCold)
+                {
+                    temp = Moderate;
+                }
+                else if (temp == Cold && touchesWarm)
+                {
+                    temp = Moderate;
+                }
+
+                result.SetCell(x, y, cell);
+                result.SetTemperature(x, y, temp);
+            }
+        }
+
+        return result;
+    }
+
+    private bool HasNeighborTemperature(MapData map, int x, int y, int targetTemp)
+    {
+        for (int offsetY = -1; offsetY <= 1; offsetY++)
+        {
+            for (int offsetX = -1; offsetX <= 1; offsetX++)
+            {
+                if (offsetX == 0 && offsetY == 0)
+                {
+                    continue;
+                }
+
+                int checkX = x + offsetX;
+                int checkY = y + offsetY;
+
+                if (checkX < 0 || checkX >= map.Width || checkY < 0 || checkY >= map.Height)
+                {
+                    continue;
+                }
+
+                if (map.GetTemperature(checkX, checkY) == targetTemp)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+    public MapData MutateTemperatures(MapData source)
+    {
+        MapData result = new MapData(source.Width, source.Height);
+
+        for (int y = 0; y < source.Height; y++)
+        {
+            for (int x = 0; x < source.Width; x++)
+            {
+                int cell = source.GetCell(x, y);
+                int temperature = source.GetTemperature(x, y);
+
+                bool touchesCold = HasNeighborTemperature(source, x, y, Cold);
+                bool touchesWarm = HasNeighborTemperature(source, x, y, Warm);
+
+                if (temperature == Warm && touchesCold)
+                {
+                    temperature = random.NextDouble() < 0.25 ? Moderate : Warm;
+                }
+                else if (temperature == Cold && touchesWarm)
+                {
+                    temperature = random.NextDouble() < 0.25 ? Moderate : Cold;
+                }
+
+                result.SetCell(x, y, cell);
+                result.SetTemperature(x, y, temperature);
+            }
+        }
+
+        return result;
     }
 }
