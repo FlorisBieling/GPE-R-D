@@ -15,6 +15,8 @@ public class MapGenerator : MonoBehaviour
     public float lacunarity;
 
     public int seed;
+    [Range(0, 10)]
+    public float redistributionPower;
     public Vector2 offset;
 
     public bool autoUpdate;
@@ -65,7 +67,9 @@ public class MapGenerator : MonoBehaviour
         {
             for (int x = 0; x < mapWidth; x++)
             {
-                float currentHeight = heightMap[x, y];
+                float currentHeight = Mathf.Pow(heightMap[x, y], redistributionPower);
+                float currentTemperature = temperatureMap[x, y];
+
                 for (int i = 0; i < regions.Length; i++)
                 {
                     if (currentHeight <= regions[i].height)
