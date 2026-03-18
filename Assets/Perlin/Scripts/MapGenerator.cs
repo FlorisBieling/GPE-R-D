@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class MapGenerator : MonoBehaviour
 {
-    public enum DrawMode { NoiseMap, ColorMap };
+    public enum DrawMode { HeightNoiseMap, TemperatureNoiseMap, ColorMap };
     public DrawMode drawMode;
 
     public int mapWidth;
@@ -26,13 +26,17 @@ public class MapGenerator : MonoBehaviour
 
     public void GenerateMap()
     {
-        float[,] heightMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, noiseScale, octaves, persistance, lacunarity, offset);
+        float[,] heightMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, noiseScale, octaves, persistance, lacunarity, offset, redistributionPower);
         float[,] temperatureMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, seed + 1, noiseScale, octaves, persistance, lacunarity, offset);
 
         MapDisplay display = FindObjectOfType<MapDisplay>();
-        if (drawMode == DrawMode.NoiseMap)
+        if (drawMode == DrawMode.HeightNoiseMap)
         {
             display.DrawTexture(TextureGenerator.TextureFromHeightMap(heightMap));
+        }
+        else if (drawMode == DrawMode.TemperatureNoiseMap)
+        {
+            display.DrawTexture(TextureGenerator.TextureFromHeightMap(temperatureMap));
         }
         else if (drawMode == DrawMode.ColorMap)
         {
@@ -68,7 +72,7 @@ public class MapGenerator : MonoBehaviour
         {
             for (int x = 0; x < mapWidth; x++)
             {
-                float currentHeight = Mathf.Pow(heightMap[x, y], redistributionPower);
+                float currentHeight = heightMap[x, y];
                 float currentTemperature = temperatureMap[x, y];
 
                 colorMap[y * mapWidth + x] = GetColor(currentHeight, currentTemperature);
