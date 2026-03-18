@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class MapGenerator : MonoBehaviour
@@ -21,16 +22,15 @@ public class MapGenerator : MonoBehaviour
 
     public bool autoUpdate;
 
-    public TerrainType[] regions;
+    public HeightTypes[] heightTypes;
 
     public void GenerateMap()
     {
         float[,] heightMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, noiseScale, octaves, persistance, lacunarity, offset);
-
         float[,] temperatureMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, seed + 1, noiseScale, octaves, persistance, lacunarity, offset);
 
         MapDisplay display = FindObjectOfType<MapDisplay>();
-        if (drawMode == DrawMode.NoiseMap) 
+        if (drawMode == DrawMode.NoiseMap)
         {
             display.DrawTexture(TextureGenerator.TextureFromHeightMap(heightMap));
         }
@@ -60,6 +60,7 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
+    // CombineMaps takes the height and temperature maps and combines them to create a color map.
     public Color[] CombineMaps(float[,] heightMap, float[,] temperatureMap)
     {
         Color[] colorMap = new Color[mapWidth * mapHeight];
@@ -70,24 +71,45 @@ public class MapGenerator : MonoBehaviour
                 float currentHeight = Mathf.Pow(heightMap[x, y], redistributionPower);
                 float currentTemperature = temperatureMap[x, y];
 
-                for (int i = 0; i < regions.Length; i++)
-                {
-                    if (currentHeight <= regions[i].height)
-                    {
-                        colorMap[y * mapWidth + x] = regions[i].color;
-                        break;
-                    }
-                }
+                colorMap[y * mapWidth + x] = GetColor(currentHeight, currentTemperature);
             }
         }
         return colorMap;
     }
+
+    // GetColor uses the height and temperature to determine the color of the pixel.
+    public Color GetColor(float currentHeight, float currentTemperature)
+    {
+        for (int i = 0; i < heightTypes.Length; i++)
+        {
+            if (currentHeight <= heightTypes[i].height)
+            {
+                for (int j = 0; j < heightTypes[i].biomeTypes.Length; j++)
+                {
+                    if (currentTemperature <= heightTypes[i].biomeTypes[j].temperature)
+                    {
+                        return heightTypes[i].biomeTypes[j].color;
+                    }
+                }
+            }
+        }
+        return Color.red;
+    }
 }
 
+// HeightTypes are determined by height and use the temperature to determine the biome type.
 [System.Serializable]
-public struct TerrainType
+public struct HeightTypes
 {
     public string name;
     public float height;
+    public BiomeType[] biomeTypes;
+}
+
+[System.Serializable]
+public struct BiomeType
+{
+    public string name;
+    public float temperature;
     public Color color;
 }

@@ -259,33 +259,83 @@ MonoBehaviour:
   mapHeight: 500
   noiseScale: 100
   octaves: 4
-  persistance: 0.748
+  persistance: 0.5
   lacunarity: 2
   seed: 12345
+  redistributionPower: 2.25
   offset: {x: 0, y: 0}
   autoUpdate: 1
   regions:
   - name: Deep water
-    height: 0.3
-    color: {r: 0, g: 0, b: 0.5245282, a: 0}
+    height: 0.1
+    color: {r: 0.033511057, g: 0, b: 0.7169812, a: 0}
   - name: Water
-    height: 0.45
-    color: {r: 0, g: 0, b: 1, a: 0}
-  - name: Sand
+    height: 0.15
+    color: {r: 0, g: 0, b: 0, a: 0}
+  - name: Beach
+    height: 0.2
+    color: {r: 0, g: 0, b: 0, a: 0}
+  - name: Flat
+    height: 0.3
+    color: {r: 0, g: 0, b: 0, a: 0}
+  - name: Forest
     height: 0.5
-    color: {r: 0.95489806, g: 1, b: 0.3830188, a: 0}
-  - name: Grass
-    height: 0.6
-    color: {r: 0, g: 1, b: 0, a: 0}
-  - name: Dark grass
-    height: 0.7
-    color: {r: 0, g: 0.5803922, b: 0, a: 0}
+    color: {r: 0, g: 0, b: 0, a: 0}
   - name: Mountain
-    height: 0.9
-    color: {r: 0.2679245, g: 0.17178501, b: 0.029825535, a: 0}
+    height: 0.8
+    color: {r: 0, g: 0, b: 0, a: 0}
   - name: Snow
     height: 1
-    color: {r: 1, g: 1, b: 1, a: 0}
+    color: {r: 0, g: 0, b: 0, a: 0}
+  heightTypes:
+  - name: Oceans
+    height: 0.2
+    biomeTypes:
+    - name: Ocean
+      temperature: 1
+      color: {r: 0.03529412, g: 0, b: 0.6627451, a: 0}
+  - name: Beach
+    height: 0.25
+    biomeTypes:
+    - name: Beach
+      temperature: 1
+      color: {r: 1, g: 0.9074044, b: 0.25471687, a: 0}
+  - name: Low land
+    height: 0.45
+    biomeTypes:
+    - name: Cold plains
+      temperature: 0.2
+      color: {r: 0, g: 1, b: 0.42293096, a: 0}
+    - name: Plains
+      temperature: 0.7
+      color: {r: 0, g: 1, b: 0, a: 0}
+    - name: Desert
+      temperature: 1
+      color: {r: 1, g: 0.7272997, b: 0, a: 0}
+  - name: Normal land
+    height: 0.85
+    biomeTypes:
+    - name: Taiga
+      temperature: 0.2
+      color: {r: 0.5450981, g: 0.2705882, b: 0.07450981, a: 1}
+    - name: Forest
+      temperature: 0.7
+      color: {r: 0, g: 0.68235296, b: 0, a: 1}
+    - name: Desert
+      temperature: 0.7
+      color: {r: 1, g: 0.81838006, b: 0, a: 1}
+  - name: Mountains
+    height: 1
+    biomeTypes:
+    - name: Snow
+      temperature: 0.2
+      color: {r: 1, g: 1, b: 1, a: 0}
+    - name: Mountains
+      temperature: 0.7
+      color: {r: 0.24313726, g: 0.16862746, b: 0.08098348, a: 0}
+    - name: Dry mountains
+      temperature: 0.7
+      color: {r: 0.24313726, g: 0.22078395, b: 0, a: 0}
 --- !u!4 &1113122174
 Transform:
   m_ObjectHideFlags: 0
