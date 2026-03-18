@@ -23,33 +23,18 @@ public class MapGenerator : MonoBehaviour
 
     public void GenerateMap()
     {
-        float[,] noiseMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, noiseScale, octaves, persistance, lacunarity, offset);
-    
-        Color[] colorMap = new Color[mapWidth * mapHeight];
-        for (int y = 0; y < mapHeight; y++)
-        {
-            for(int x = 0; x < mapWidth; x++)
-            {
-                float currentHeight = noiseMap[x, y];
-                for(int i = 0; i < regions.Length; i++)
-                {
-                    if(currentHeight <= regions[i].height)
-                    {
-                        colorMap[y * mapWidth + x] = regions[i].color;
-                        break;
-                    }
-                }
-            }
-        }
+        float[,] heightMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, noiseScale, octaves, persistance, lacunarity, offset);
+
+        float[,] temperatureMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, seed + 1, noiseScale, octaves, persistance, lacunarity, offset);
 
         MapDisplay display = FindObjectOfType<MapDisplay>();
         if (drawMode == DrawMode.NoiseMap) 
         {
-            display.DrawTexture(TextureGenerator.TextureFromHeightMap(noiseMap));
+            display.DrawTexture(TextureGenerator.TextureFromHeightMap(heightMap));
         }
         else if (drawMode == DrawMode.ColorMap)
         {
-            display.DrawTexture(TextureGenerator.TextureFromColorMap(colorMap, mapWidth, mapHeight));
+            display.DrawTexture(TextureGenerator.TextureFromColorMap(CombineMaps(heightMap, temperatureMap), mapWidth, mapHeight));
         }
     }
 
@@ -71,6 +56,27 @@ public class MapGenerator : MonoBehaviour
         {
             octaves = 0;
         }
+    }
+
+    public Color[] CombineMaps(float[,] heightMap, float[,] temperatureMap)
+    {
+        Color[] colorMap = new Color[mapWidth * mapHeight];
+        for (int y = 0; y < mapHeight; y++)
+        {
+            for (int x = 0; x < mapWidth; x++)
+            {
+                float currentHeight = heightMap[x, y];
+                for (int i = 0; i < regions.Length; i++)
+                {
+                    if (currentHeight <= regions[i].height)
+                    {
+                        colorMap[y * mapWidth + x] = regions[i].color;
+                        break;
+                    }
+                }
+            }
+        }
+        return colorMap;
     }
 }
 
