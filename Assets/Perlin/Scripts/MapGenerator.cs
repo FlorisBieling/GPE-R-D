@@ -6,13 +6,9 @@ public class MapGenerator : MonoBehaviour
     public enum DrawMode { HeightNoiseMap, TemperatureNoiseMap, ColorMap, Mesh };
     public DrawMode drawMode;
 
-    public int mapWidth;
-    public int mapHeight;
-
     const int mapChunkSize = 241;
     [Range(0, 6)]
     public int levelOfDetail;
-
     public float noiseScale;
 
     public int octaves;
@@ -34,8 +30,8 @@ public class MapGenerator : MonoBehaviour
 
     public void GenerateMap()
     {
-        float[,] heightMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, noiseScale, octaves, persistance, lacunarity, offset, redistributionPower);
-        float[,] temperatureMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, seed + 1, noiseScale, octaves, persistance, lacunarity, offset);
+        float[,] heightMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, offset, redistributionPower);
+        float[,] temperatureMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed + 1, noiseScale, octaves, persistance, lacunarity, offset);
 
         MapDisplay display = FindObjectOfType<MapDisplay>();
         if (drawMode == DrawMode.HeightNoiseMap)
@@ -48,27 +44,19 @@ public class MapGenerator : MonoBehaviour
         } 
         else if (drawMode == DrawMode.ColorMap)
         {
-            display.DrawTexture(TextureGenerator.TextureFromColorMap(CombineMaps(heightMap, temperatureMap), mapWidth, mapHeight));
+            display.DrawTexture(TextureGenerator.TextureFromColorMap(CombineMaps(heightMap, temperatureMap), mapChunkSize, mapChunkSize));
         }
         else if (drawMode == DrawMode.Mesh)
         {
             display.DrawMesh(
                 MeshGenerator.GenerateTerrainMesh(heightMap, meshHeightMultiplier, meshHeightCurve, levelOfDetail),
-                TextureGenerator.TextureFromColorMap(CombineMaps(heightMap, temperatureMap), mapWidth, mapHeight)
+                TextureGenerator.TextureFromColorMap(CombineMaps(heightMap, temperatureMap), mapChunkSize, mapChunkSize)
                 );
         }
     }
 
     private void OnValidate()
     {
-        if (mapWidth < 1)
-        {
-            mapWidth = 1;
-        }
-        if (mapHeight < 1)
-        {
-            mapHeight = 1;
-        }
         if (lacunarity < 1)
         {
             lacunarity = 1;
@@ -82,15 +70,15 @@ public class MapGenerator : MonoBehaviour
     // CombineMaps takes the height and temperature maps and combines them to create a color map.
     public Color[] CombineMaps(float[,] heightMap, float[,] temperatureMap)
     {
-        Color[] colorMap = new Color[mapWidth * mapHeight];
-        for (int y = 0; y < mapHeight; y++)
+        Color[] colorMap = new Color[mapChunkSize * mapChunkSize];
+        for (int y = 0; y < mapChunkSize; y++)
         {
-            for (int x = 0; x < mapWidth; x++)
+            for (int x = 0; x < mapChunkSize; x++)
             {
                 float currentHeight = heightMap[x, y];
                 float currentTemperature = temperatureMap[x, y];
 
-                colorMap[y * mapWidth + x] = GetColor(currentHeight, currentTemperature);
+                colorMap[y * mapChunkSize + x] = GetColor(currentHeight, currentTemperature);
             }
         }
         return colorMap;
