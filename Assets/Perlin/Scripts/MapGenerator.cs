@@ -36,11 +36,17 @@ public class MapGenerator : MonoBehaviour
         MapDisplay display = FindObjectOfType<MapDisplay>();
         if (drawMode == DrawMode.HeightNoiseMap)
         {
-            display.DrawTexture(TextureGenerator.TextureFromHeightMap(heightMap));
+            display.DrawMesh(
+                MeshGenerator.GenerateTerrainMesh(heightMap, meshHeightMultiplier, meshHeightCurve, levelOfDetail),
+                TextureGenerator.TextureFromHeightMap(heightMap)
+                );
         } 
         else if (drawMode == DrawMode.TemperatureNoiseMap)
         {
-            display.DrawTexture(TextureGenerator.TextureFromHeightMap(temperatureMap));
+            display.DrawMesh(
+                MeshGenerator.GenerateTerrainMesh(temperatureMap, meshHeightMultiplier, meshHeightCurve, levelOfDetail),
+                TextureGenerator.TextureFromHeightMap(temperatureMap)
+                );
         } 
         else if (drawMode == DrawMode.ColorMap)
         {
