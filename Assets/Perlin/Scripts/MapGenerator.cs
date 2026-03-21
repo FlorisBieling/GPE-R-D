@@ -3,11 +3,16 @@ using UnityEngine;
 
 public class MapGenerator : MonoBehaviour
 {
-    public enum DrawMode { HeightNoiseMap, TemperatureNoiseMap, ColorMap };
+    public enum DrawMode { HeightNoiseMap, TemperatureNoiseMap, ColorMap, Mesh };
     public DrawMode drawMode;
 
     public int mapWidth;
     public int mapHeight;
+
+    const int mapChunkSize = 241;
+    [Range(0, 6)]
+    public int levelOfDetail;
+
     public float noiseScale;
 
     public int octaves;
@@ -19,6 +24,9 @@ public class MapGenerator : MonoBehaviour
     [Range(0, 10)]
     public float redistributionPower;
     public Vector2 offset;
+
+    public float meshHeightMultiplier;
+    public AnimationCurve meshHeightCurve;
 
     public bool autoUpdate;
 
@@ -33,14 +41,21 @@ public class MapGenerator : MonoBehaviour
         if (drawMode == DrawMode.HeightNoiseMap)
         {
             display.DrawTexture(TextureGenerator.TextureFromHeightMap(heightMap));
-        }
+        } 
         else if (drawMode == DrawMode.TemperatureNoiseMap)
         {
             display.DrawTexture(TextureGenerator.TextureFromHeightMap(temperatureMap));
-        }
+        } 
         else if (drawMode == DrawMode.ColorMap)
         {
             display.DrawTexture(TextureGenerator.TextureFromColorMap(CombineMaps(heightMap, temperatureMap), mapWidth, mapHeight));
+        }
+        else if (drawMode == DrawMode.Mesh)
+        {
+            display.DrawMesh(
+                MeshGenerator.GenerateTerrainMesh(heightMap, meshHeightMultiplier, meshHeightCurve, levelOfDetail),
+                TextureGenerator.TextureFromColorMap(CombineMaps(heightMap, temperatureMap), mapWidth, mapHeight)
+                );
         }
     }
 
