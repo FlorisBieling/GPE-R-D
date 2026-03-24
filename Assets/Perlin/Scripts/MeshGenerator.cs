@@ -3,10 +3,11 @@ using System.Collections;
 
 public static class MeshGenerator
 {
-
-    public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve _heightCurve, int levelOfDetail)
+    public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve _heightCurve, int levelOfDetail, bool isTemperatureMap = false)
     {
         AnimationCurve heightCurve = new AnimationCurve(_heightCurve.keys);
+        if (isTemperatureMap) heightCurve = AnimationCurve.Linear(0, 0, 1, 1);
+
         int width = heightMap.GetLength(0);
         int height = heightMap.GetLength(1);
         float topLeftX = (width - 1) / -2f;

@@ -51,7 +51,7 @@ public class MapGenerator : MonoBehaviour
         else if (drawMode == DrawMode.TemperatureNoiseMap)
         {
             display.DrawMesh(
-                MeshGenerator.GenerateTerrainMesh(mapData.temperatureMap, meshHeightMultiplier, meshHeightCurve, editorPreviewLOD),
+                MeshGenerator.GenerateTerrainMesh(mapData.temperatureMap, meshHeightMultiplier, meshHeightCurve, editorPreviewLOD, true),
                 TextureGenerator.TextureFromHeightMap(mapData.temperatureMap)
                 );
         }
@@ -126,7 +126,7 @@ public class MapGenerator : MonoBehaviour
 
     MapData GenerateMapData(Vector2 centre)
     {
-        float[,] heightMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, centre + offset, normalizeMode, redistributionPower);
+        float[,] heightMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, centre + offset, normalizeMode);
         float[,] temperatureMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed + 1, noiseScale*5f, octaves, persistance, lacunarity, centre + offset, normalizeMode);
         
         return new MapData(heightMap, temperatureMap, CombineMaps(heightMap, temperatureMap));
