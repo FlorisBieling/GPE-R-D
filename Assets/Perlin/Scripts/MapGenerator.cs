@@ -9,6 +9,8 @@ public class MapGenerator : MonoBehaviour
     public enum DrawMode { HeightNoiseMap, TemperatureNoiseMap, ColorMap, Mesh };
     public DrawMode drawMode;
 
+    public Noise.NormalizeMode normalizeMode;
+
     public const int mapChunkSize = 241;
     [Range(0, 6)]
     public int editorPreviewLOD;
@@ -124,8 +126,8 @@ public class MapGenerator : MonoBehaviour
 
     MapData GenerateMapData(Vector2 centre)
     {
-        float[,] heightMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, centre + offset, redistributionPower);
-        float[,] temperatureMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed + 1, noiseScale, octaves, persistance, lacunarity, centre + offset);
+        float[,] heightMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, centre + offset, normalizeMode, redistributionPower);
+        float[,] temperatureMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed + 1, noiseScale*5f, octaves, persistance, lacunarity, centre + offset, normalizeMode);
         
         return new MapData(heightMap, temperatureMap, CombineMaps(heightMap, temperatureMap));
     }
@@ -174,20 +176,21 @@ public class MapGenerator : MonoBehaviour
     // GetColor uses the height and temperature to determine the color of the pixel.
     public Color GetColor(float currentHeight, float currentTemperature)
     {
+        Color color = Color.red;
         for (int i = 0; i < heightTypes.Length; i++)
         {
-            if (currentHeight <= heightTypes[i].height)
+            if (currentHeight >= heightTypes[i].height)
             {
                 for (int j = 0; j < heightTypes[i].biomeTypes.Length; j++)
                 {
-                    if (currentTemperature <= heightTypes[i].biomeTypes[j].temperature)
+                    if (currentTemperature >= heightTypes[i].biomeTypes[j].temperature)
                     {
-                        return heightTypes[i].biomeTypes[j].color;
+                        color = heightTypes[i].biomeTypes[j].color;
                     }
                 }
             }
         }
-        return Color.red;
+        return color;
     }
 }
 
