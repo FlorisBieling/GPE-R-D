@@ -13,7 +13,7 @@ public class TextureMapVisualizer : MonoBehaviour
 
     private Texture2D currentTexture;
 
-    public void Draw(MapData map, MapDisplayMode displayMode)
+    public void Draw(MapDataOLD map, MapDisplayMode displayMode)
     {
         int textureWidth = map.Width * pixelsPerCell;
         int textureHeight = map.Height * pixelsPerCell;
@@ -51,7 +51,7 @@ public class TextureMapVisualizer : MonoBehaviour
         }
     }
 
-    private Color GetColor(MapData map, int x, int y, MapDisplayMode displayMode)
+    private Color GetColor(MapDataOLD map, int x, int y, MapDisplayMode displayMode)
     {
         if (displayMode == MapDisplayMode.LandOcean)
         {

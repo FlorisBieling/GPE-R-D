@@ -1,11 +1,11 @@
-public class MapData
+public class MapDataOLD
 {
     public int Width { get; }
     public int Height { get; }
     public int[,] Cells { get; }
     public int[,] Temperatures { get; }
 
-    public MapData(int width, int height)
+    public MapDataOLD(int width, int height)
     {
         Width = width;
         Height = height;

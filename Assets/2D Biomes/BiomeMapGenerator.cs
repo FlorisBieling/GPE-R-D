@@ -18,9 +18,9 @@ public class BiomeMapGenerator : MonoBehaviour
         random = new System.Random(seed);
     }
 
-    public MapData GenerateInitialMap(int width, int height, float landChance)
+    public MapDataOLD GenerateInitialMap(int width, int height, float landChance)
     {
-        MapData map = new MapData(width, height);
+        MapDataOLD map = new MapDataOLD(width, height);
 
         for (int y = 0; y < height; y++)
         {
@@ -34,11 +34,11 @@ public class BiomeMapGenerator : MonoBehaviour
         return map;
     }
 
-    public MapData Subdivide(MapData source)
+    public MapDataOLD Subdivide(MapDataOLD source)
     {
         int newWidth = source.Width * 2;
         int newHeight = source.Height * 2;
-        MapData result = new MapData(newWidth, newHeight);
+        MapDataOLD result = new MapDataOLD(newWidth, newHeight);
 
         for (int y = 0; y < source.Height; y++)
         {
@@ -65,9 +65,9 @@ public class BiomeMapGenerator : MonoBehaviour
         return result;
     }
 
-    public MapData MutateCoast(MapData source)
+    public MapDataOLD MutateCoast(MapDataOLD source)
     {
-        MapData result = new MapData(source.Width, source.Height);
+        MapDataOLD result = new MapDataOLD(source.Width, source.Height);
 
         for (int y = 0; y < source.Height; y++)
         {
@@ -99,9 +99,9 @@ public class BiomeMapGenerator : MonoBehaviour
         return result;
     }
 
-    public MapData AddIslandsInOpenOcean(MapData source)
+    public MapDataOLD AddIslandsInOpenOcean(MapDataOLD source)
     {
-        MapData result = new MapData(source.Width, source.Height);
+        MapDataOLD result = new MapDataOLD(source.Width, source.Height);
 
         for (int y = 0; y < source.Height; y++)
         {
@@ -133,9 +133,9 @@ public class BiomeMapGenerator : MonoBehaviour
         return result;
     }
 
-    public MapData GenerateTemperatures(MapData source)
+    public MapDataOLD GenerateTemperatures(MapDataOLD source)
     {
-        MapData result = new MapData(source.Width, source.Height);
+        MapDataOLD result = new MapDataOLD(source.Width, source.Height);
 
         for (int y = 0; y < source.Height; y++)
         {
@@ -152,7 +152,7 @@ public class BiomeMapGenerator : MonoBehaviour
         return result;
     }
 
-    private bool HasNeighborOfType(MapData map, int x, int y, int targetType)
+    private bool HasNeighborOfType(MapDataOLD map, int x, int y, int targetType)
     {
         for (int offsetY = -1; offsetY <= 1; offsetY++)
         {
@@ -181,7 +181,7 @@ public class BiomeMapGenerator : MonoBehaviour
         return false;
     }
 
-    private bool IsSurroundedByOcean4Directions(MapData map, int x, int y)
+    private bool IsSurroundedByOcean4Directions(MapDataOLD map, int x, int y)
     {
         if (x <= 0 || x >= map.Width - 1 || y <= 0 || y >= map.Height - 1)
         {
@@ -194,9 +194,9 @@ public class BiomeMapGenerator : MonoBehaviour
                map.GetCell(x + 1, y) == Ocean;
     }
 
-    public MapData ModerateTemperatureEdges(MapData source)
+    public MapDataOLD ModerateTemperatureEdges(MapDataOLD source)
     {
-        MapData result = new MapData(source.Width, source.Height);
+        MapDataOLD result = new MapDataOLD(source.Width, source.Height);
 
         for (int y = 0; y < source.Height; y++)
         {
@@ -225,7 +225,7 @@ public class BiomeMapGenerator : MonoBehaviour
         return result;
     }
 
-    private bool HasNeighborTemperature(MapData map, int x, int y, int targetTemp)
+    private bool HasNeighborTemperature(MapDataOLD map, int x, int y, int targetTemp)
     {
         for (int offsetY = -1; offsetY <= 1; offsetY++)
         {
@@ -253,9 +253,9 @@ public class BiomeMapGenerator : MonoBehaviour
 
         return false;
     }
-    public MapData MutateTemperatures(MapData source)
+    public MapDataOLD MutateTemperatures(MapDataOLD source)
     {
-        MapData result = new MapData(source.Width, source.Height);
+        MapDataOLD result = new MapDataOLD(source.Width, source.Height);
 
         for (int y = 0; y < source.Height; y++)
         {

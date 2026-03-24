@@ -6,7 +6,7 @@ public class MapController : MonoBehaviour
     [SerializeField] private BiomeMapGenerator generator;
     [SerializeField] private TextureMapVisualizer visualizer;
 
-    private MapData currentMap;
+    private MapDataOLD currentMap;
     private TextureMapVisualizer.MapDisplayMode currentDisplayMode = TextureMapVisualizer.MapDisplayMode.LandOcean;
 
     private void Start()
