@@ -173,6 +173,44 @@ body {
     margin: 0;
 }
 
+.demo-wrapper {
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 14px;
+    margin-top: 20px;
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+
+.demo-summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 18px 20px;
+    font-weight: 700;
+    background: #172033;
+    user-select: none;
+}
+
+.demo-summary::-webkit-details-marker {
+    display: none;
+}
+
+.demo-summary::before {
+    content: "▶";
+    display: inline-block;
+    margin-right: 10px;
+    transition: transform 0.2s ease;
+}
+
+.demo-wrapper[open] .demo-summary::before {
+    transform: rotate(90deg);
+}
+
+.demo-content {
+    padding: 20px;
+    border-top: 1px solid #374151;
+}
+
 input[type="range"] {
     width: 100%;
     margin-bottom: 10px;

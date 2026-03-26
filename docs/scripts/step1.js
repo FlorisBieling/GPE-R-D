@@ -1,16 +1,14 @@
 function drawNoiseMap() {
-    const widthInput = document.getElementById("mapWidth");
-    const heightInput = document.getElementById("mapHeight");
     const scaleInput = document.getElementById("noiseScale");
     const seedInput = document.getElementById("noiseSeed");
     const canvas = document.getElementById("noiseCanvas");
 
-    if (!widthInput || !heightInput || !scaleInput || !seedInput || !canvas || typeof noise === "undefined") {
+    if (!scaleInput || !seedInput || !canvas || typeof noise === "undefined") {
         return;
     }
 
-    const mapWidth = Math.max(1, parseInt(widthInput.value, 10) || 1);
-    const mapHeight = Math.max(1, parseInt(heightInput.value, 10) || 1);
+    const mapWidth = 200;
+    const mapHeight = 200;
     const noiseScale = Math.max(0.0001, parseFloat(scaleInput.value) || 1);
     const seed = parseInt(seedInput.value, 10) || 0;
 
@@ -25,7 +23,6 @@ function drawNoiseMap() {
             const sampleY = y / noiseScale;
 
             let value = noise.perlin2(sampleX, sampleY);
-
             value = (value + 1) / 2;
             value = Math.max(0, Math.min(1, value));
 
@@ -51,18 +48,21 @@ function drawNoiseMap() {
     ctx.drawImage(tempCanvas, 0, 0, canvas.width, canvas.height);
 }
 
+function updateSliderValues() {
+    document.getElementById("scaleValue").textContent = document.getElementById("noiseScale").value;
+    document.getElementById("seedValue").textContent = document.getElementById("noiseSeed").value;
+}
+
 function setupStep1() {
-    const widthInput = document.getElementById("mapWidth");
-    const heightInput = document.getElementById("mapHeight");
     const scaleInput = document.getElementById("noiseScale");
     const seedInput = document.getElementById("noiseSeed");
     const button = document.getElementById("generateNoiseButton");
 
-    if (!widthInput || !heightInput || !scaleInput || !seedInput || !button) {
+    if (!scaleInput || !seedInput || !button) {
         return;
     }
 
-    const inputs = [widthInput, heightInput, scaleInput, seedInput];
+    const inputs = [scaleInput, seedInput];
 
     inputs.forEach(input => {
         input.addEventListener("input", () => {
@@ -78,10 +78,3 @@ function setupStep1() {
 }
 
 window.addEventListener("stepsLoaded", setupStep1);
-
-function updateSliderValues() {
-    document.getElementById("widthValue").textContent = document.getElementById("mapWidth").value;
-    document.getElementById("heightValue").textContent = document.getElementById("mapHeight").value;
-    document.getElementById("scaleValue").textContent = document.getElementById("noiseScale").value;
-    document.getElementById("seedValue").textContent = document.getElementById("noiseSeed").value;
-}
