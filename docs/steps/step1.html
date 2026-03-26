@@ -1,65 +1,25 @@
-<details class="step-wrapper" open>
-    <summary class="step-summary">Step 1: Perlin Noise</summary>
+<p>
+    The Unity implementation for this step is split into three scripts.
+    Each script has a clear responsibility: generating the noise values,
+    controlling when the map is created, and displaying the result visually.
+</p>
 
-    <div class="step-card">
-        <p>
-            The first step in my procedural world development is to create a noise map using Perlin noise.
-            Perlin noise is a type of gradient noise that produces smooth, natural-looking textures.
-            It is commonly used in procedural generation to create terrain, clouds, and other organic patterns.
-            I have created a small interactive demo where you can adjust the noise scale and seed to see how it
-            affects the generated noise map.
-        </p>
+<details class="code-wrapper">
+    <summary class="code-summary">Show Unity code</summary>
 
-        <details class="demo-wrapper" open>
-            <summary class="demo-summary">Show demo</summary>
+    <p>
+        <strong>Noise.cs</strong><br>
+        This script generates the actual Perlin noise map. It creates a 2D array
+        of float values and fills it by sampling Unity’s built-in
+        <code>Mathf.PerlinNoise</code> function. Each position in the grid is converted
+        into a noise value between 0 and 1. The scale determines how zoomed in or
+        stretched the noise pattern is.
+    </p>
 
-            <div class="demo-content">
-                <div class="demo-layout">
-                    <div class="controls">
-                        <label>Noise Scale: <span id="scaleValue">40</span></label>
-                        <input id="noiseScale" type="range" min="5" max="200" value="40">
+    <div class="code-block">
+<pre><code>using UnityEngine;
 
-                        <label>Seed: <span id="seedValue">0</span></label>
-                        <input id="noiseSeed" type="range" min="0" max="100" value="0">
-
-                        <button id="generateNoiseButton">Generate Map</button>
-
-                        <p>
-                            Adjust the noise scale to see how it affects the frequency of the noise pattern.
-                            A smaller scale will produce a more detailed noise map, while a larger scale will create a
-                            smoother, more gradual pattern.
-                            Changing the seed will generate a completely different noise map, allowing you to explore
-                            various terrain configurations.
-                        </p>
-                    </div>
-
-                    <div class="preview">
-                        <canvas id="noiseCanvas" width="200" height="200"></canvas>
-                    </div>
-                </div>
-            </div>
-        </details>
-
-        <p>
-            The Unity implementation for this first step is divided into three scripts.
-            Each script has a separate responsibility. `Noise.cs` generates the raw Perlin noise values,
-            `MapGenerator.cs` controls when the map should be generated, and `MapDisplay.cs` converts the
-            generated values into a visible texture on screen.
-        </p>
-
-        <details class="code-wrapper">
-            <summary class="code-summary">Show Unity code</summary>
-
-            <p>
-                <strong>Noise.cs</strong><br>
-                This script is responsible for generating the noise map itself. It creates a 2D float array,
-                loops through every coordinate, samples Perlin noise for each point, and stores the result.
-                The `scale` value affects how stretched or compressed the pattern becomes. A low scale creates
-                more variation in a smaller space, while a high scale creates smoother and broader shapes.
-            </p>
-
-            <div class="code-block">
-                <pre><code>public static class Noise
+public static class Noise
 {
     public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, float scale)
     {
@@ -85,24 +45,32 @@
         return noiseMap;
     }
 }</code></pre>
-            </div>
+    </div>
 
-            <p>
-                <strong>MapGenerator.cs</strong><br>
-                This script acts as the controller of the generation process. It requests a new noise map from
-                `Noise.cs` and then passes that result to `MapDisplay.cs`. This keeps the project structured:
-                one script generates data, another script decides when that happens, and another script handles
-                the visual output.
-            </p>
+    <p>
+        The nested loops go over every coordinate in the map. For each position,
+        the x and y values are divided by the scale to control the frequency of the noise.
+        A smaller scale results in more variation (more detail), while a larger scale
+        produces smoother, more gradual transitions.
+    </p>
 
-            <div class="code-block">
-                <pre><code>using UnityEngine;
+    <p>
+        <strong>MapGenerator.cs</strong><br>
+        This script controls when a new map is generated. It calls the noise function
+        and passes the result to the display script. This keeps the logic separated:
+        one script generates data, another handles when it happens.
+    </p>
+
+    <div class="code-block">
+<pre><code>using UnityEngine;
 
 public class MapGenerator : MonoBehaviour
 {
-    public int mapWidth = 200;
-    public int mapHeight = 200;
-    public float noiseScale = 40f;
+    public int mapWidth;
+    public int mapHeight;
+    public float noiseScale;
+
+    public bool autoUpdate;
 
     public void GenerateMap()
     {
@@ -112,18 +80,24 @@ public class MapGenerator : MonoBehaviour
         display.DrawNoiseMap(noiseMap);
     }
 }</code></pre>
-            </div>
+    </div>
 
-            <p>
-                <strong>MapDisplay.cs</strong><br>
-                This script converts the generated float values into visible grayscale pixels. Each value in the
-                noise map is turned into a color, where lower values become darker and higher values become lighter.
-                After that, the color map is applied to a texture, which is then shown in the scene. This makes it
-                possible to immediately see the structure of the generated noise.
-            </p>
+    <p>
+        This script acts as the central point of control. It gathers the settings
+        (width, height, scale), generates the noise map, and forwards the result.
+        By separating this from the noise calculation, the system stays flexible
+        and easier to expand later.
+    </p>
 
-            <div class="code-block">
-                <pre><code>using UnityEngine;
+    <p>
+        <strong>MapDisplay.cs</strong><br>
+        This script converts the noise values into a visible texture. Each value
+        is mapped to a grayscale color, where 0 is black and 1 is white. The result
+        is then applied to a material so it can be displayed in the scene.
+    </p>
+
+    <div class="code-block">
+<pre><code>using UnityEngine;
 
 public class MapDisplay : MonoBehaviour
 {
@@ -135,14 +109,14 @@ public class MapDisplay : MonoBehaviour
         int height = noiseMap.GetLength(1);
 
         Texture2D texture = new Texture2D(width, height);
+
         Color[] colorMap = new Color[width * height];
 
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
             {
-                float value = noiseMap[x, y];
-                colorMap[y * width + x] = new Color(value, value, value);
+                colorMap[y * width + x] = Color.Lerp(Color.black, Color.white, noiseMap[x, y]);
             }
         }
 
@@ -153,7 +127,13 @@ public class MapDisplay : MonoBehaviour
         textureRenderer.transform.localScale = new Vector3(width, 1, height);
     }
 }</code></pre>
-            </div>
-        </details>
     </div>
+
+    <p>
+        The noise values are translated into colors using <code>Color.Lerp</code>.
+        This linearly interpolates between black and white based on the noise value.
+        After that, the texture is applied to a renderer and scaled to match the
+        dimensions of the noise map.
+    </p>
+
 </details>
