@@ -1,6 +1,7 @@
 <details class="step-wrapper" open>
     <summary class="step-summary">Step 1: Perlin Noise</summary>
 
+    </details class="step" open>
     <div class="step-card">
         <p>
             This step shows how Perlin noise can be used to generate a grayscale map.
@@ -9,32 +10,33 @@
 
         <div class="controls">
 
-    <label>Map Width: <span id="widthValue">100</span></label>
-    <input id="mapWidth" type="range" min="100" max="1000" value="100">
+            <label>Map Width: <span id="widthValue">100</span></label>
+            <input id="mapWidth" type="range" min="100" max="1000" value="100">
 
-    <label>Map Height: <span id="heightValue">100</span></label>
-    <input id="mapHeight" type="range" min="100" max="1000" value="100">
+            <label>Map Height: <span id="heightValue">100</span></label>
+            <input id="mapHeight" type="range" min="100" max="1000" value="100">
 
-    <label>Noise Scale: <span id="scaleValue">10</span></label>
-    <input id="noiseScale" type="range" min="5" max="200" value="10">
+            <label>Noise Scale: <span id="scaleValue">10</span></label>
+            <input id="noiseScale" type="range" min="5" max="200" value="10">
 
-    <label>Seed: <span id="seedValue">1</span></label>
-    <input id="noiseSeed" type="range" min="1" max="100" value="0">
+            <label>Seed: <span id="seedValue">1</span></label>
+            <input id="noiseSeed" type="range" min="1" max="100" value="0">
 
-    <button id="generateNoiseButton">Generate Map</button>
+            <button id="generateNoiseButton">Generate Map</button>
 
-</div>
-
-            <div class="preview">
-                <canvas id="noiseCanvas" width="300" height="300"></canvas>
-            </div>
         </div>
 
-        <details class="code-wrapper">
-            <summary class="code-summary">Show Unity code</summary>
+        <div class="preview">
+            <canvas id="noiseCanvas" width="300" height="300"></canvas>
+        </div>
+    </div>
+    </details>
 
-            <div class="code-block">
-<pre><code>public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, float scale)
+    <details class="code-wrapper">
+        <summary class="code-summary">Show Unity code</summary>
+
+        <div class="code-block">
+            <pre><code>public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, float scale)
 {
     float[,] noiseMap = new float[mapWidth, mapHeight];
 
@@ -57,7 +59,7 @@
 
     return noiseMap;
 }</code></pre>
-            </div>
-        </details>
+        </div>
+    </details>
     </div>
 </details>
