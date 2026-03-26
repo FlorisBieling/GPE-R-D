@@ -91,6 +91,10 @@ public class EndlessTerrain : MonoBehaviour
         bool mapDataRecieved;
         int previousLODIndex = -1;
 
+        GameObject decorationObject;
+        Transform decorationParent;
+        bool decorationsSpawned;
+
         public TerrainChunk(Vector2 coord, int size, LODInfo[] detailLevels, Transform parent, Material material)
         {
             this.detailLevels = detailLevels;
@@ -109,6 +113,13 @@ public class EndlessTerrain : MonoBehaviour
             meshObject.transform.localScale = Vector3.one * scale;
             SetVisible(false);
 
+            decorationObject = new GameObject("Decorations");
+            decorationParent = decorationObject.transform;
+            decorationParent.parent = meshObject.transform;
+            decorationParent.localPosition = Vector3.zero;
+            decorationParent.localRotation = Quaternion.identity;
+            decorationParent.localScale = Vector3.one;
+
             lodMeshes = new LODMesh[detailLevels.Length];
             for (int i = 0; i < detailLevels.Length; i++)
             {
@@ -125,6 +136,8 @@ public class EndlessTerrain : MonoBehaviour
 
             Texture2D texture = TextureGenerator.TextureFromColorMap(mapData.colorMap, MapGenerator.mapChunkSize, MapGenerator.mapChunkSize);
             meshRenderer.material.mainTexture = texture;
+
+            SpawnDecorations();
 
             UpdateTerrainChunk();
         }
@@ -174,6 +187,61 @@ public class EndlessTerrain : MonoBehaviour
                     terrainChunksVisibleLastUpdate.Add(this);
                 }
                 SetVisible(visible);
+            }
+        }
+
+        void SpawnDecorations()
+        {
+            if (decorationsSpawned)
+            {
+                return;
+            }
+
+            decorationsSpawned = true;
+
+            int size = MapGenerator.mapChunkSize;
+            float topLeftX = (size - 1) / -2f;
+            float topLeftZ = (size - 1) / 2f;
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float currentHeight = mapData.heightMap[x, y];
+                    float currentTemperature = mapData.temperatureMap[x, y];
+
+                    BiomeType biome = mapGenerator.GetBiome(currentHeight, currentTemperature);
+
+                    if (biome.decorationPrefabs == null || biome.decorationPrefabs.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    if (Random.value > biome.decorationChance)
+                    {
+                        continue;
+                    }
+
+                    GameObject prefabToSpawn = biome.decorationPrefabs[Random.Range(0, biome.decorationPrefabs.Length)];
+
+                    float localX = topLeftX + x;
+                    float localZ = topLeftZ - y;
+                    float localY = mapGenerator.GetMeshHeight(currentHeight);
+
+                    Vector3 localPosition = new Vector3(localX, localY, localZ);
+
+                    localPosition += new Vector3(
+                        Random.Range(-0.35f, 0.35f),
+                        0f,
+                        Random.Range(-0.35f, 0.35f)
+                    );
+
+                    Quaternion localRotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
+
+                    GameObject spawnedObject = Object.Instantiate(prefabToSpawn, decorationParent);
+                    spawnedObject.transform.localPosition = localPosition;
+                    spawnedObject.transform.localRotation = localRotation;
+                }
             }
         }
 

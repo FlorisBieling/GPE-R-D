@@ -124,6 +124,16 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
+    public float GetMeshHeight(float heightValue)
+    {
+        return meshHeightCurve.Evaluate(heightValue) * meshHeightMultiplier;
+    }
+
+    public MapData GetMapData(Vector2 centre)
+    {
+        return GenerateMapData(centre);
+    }
+
     MapData GenerateMapData(Vector2 centre)
     {
         float[,] heightMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, centre + offset, normalizeMode);
