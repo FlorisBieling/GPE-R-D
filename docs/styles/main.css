@@ -1,35 +1,130 @@
 body {
-    font-family: Arial, sans-serif;
     margin: 0;
-    background-color: #121212;
-    color: #ffffff;
+    font-family: Arial, sans-serif;
+    background: #111827;
+    color: #f3f4f6;
 }
 
-header {
-    background-color: #1f1f1f;
-    padding: 20px;
+.site-header {
     text-align: center;
+    padding: 40px 20px;
+    background: #0f172a;
+    border-bottom: 1px solid #1f2937;
 }
 
-main {
-    max-width: 900px;
-    margin: auto;
+.site-header h1 {
+    margin: 0 0 10px 0;
+    font-size: 2.2rem;
+}
+
+.site-header p {
+    margin: 0;
+    color: #cbd5e1;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.intro-card,
+.step-card,
+.step-navigation {
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 14px;
     padding: 20px;
+    margin-bottom: 24px;
 }
 
-h1, h2 {
-    margin-bottom: 10px;
+.step-links {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 12px;
 }
 
-.card {
-    background-color: #1e1e1e;
-    padding: 15px;
-    margin: 15px 0;
-    border-radius: 10px;
-}
-
-a {
-    color: #4fc3f7;
+.step-links a {
+    color: #93c5fd;
     text-decoration: none;
-    font-weight: bold;
+    font-weight: 700;
+}
+
+.step-links a:hover {
+    text-decoration: underline;
+}
+
+.demo-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+    align-items: start;
+    margin-top: 20px;
+}
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.controls label {
+    font-weight: 700;
+    margin-top: 4px;
+}
+
+.controls input,
+.controls button {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #4b5563;
+    background: #111827;
+    color: #f9fafb;
+}
+
+.controls button {
+    cursor: pointer;
+    font-weight: 700;
+    background: #2563eb;
+    border: none;
+}
+
+.controls button:hover {
+    background: #1d4ed8;
+}
+
+.preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#noiseCanvas {
+    width: 100%;
+    max-width: 420px;
+    aspect-ratio: 1 / 1;
+    border: 1px solid #4b5563;
+    border-radius: 10px;
+    background: #000000;
+}
+
+.code-block {
+    margin-top: 24px;
+    background: #0b1220;
+    border: 1px solid #374151;
+    border-radius: 10px;
+    overflow-x: auto;
+}
+
+.code-block pre {
+    margin: 0;
+    padding: 16px;
+    color: #e5e7eb;
+}
+
+@media (max-width: 800px) {
+    .demo-layout {
+        grid-template-columns: 1fr;
+    }
 }

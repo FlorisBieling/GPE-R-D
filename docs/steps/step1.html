@@ -1,29 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Step 1</title>
+<div class="step-card">
+    <h2>Step 1: Perlin Noise</h2>
+    <p>
+        This step shows the basic idea behind the first Perlin noise map.
+        You can change the width, height and scale to see how the generated
+        pattern changes.
+    </p>
 
-    <link rel="stylesheet" href="../styles/main.css">
-</head>
+    <div class="demo-layout">
+        <div class="controls">
+            <label for="mapWidth">Map Width</label>
+            <input id="mapWidth" type="number" min="1" max="300" value="100">
 
-<body>
+            <label for="mapHeight">Map Height</label>
+            <input id="mapHeight" type="number" min="1" max="300" value="100">
 
-<header>
-    <h1>Step 1: Basic Example</h1>
-    <a href="../index.html">← Back</a>
-</header>
+            <label for="noiseScale">Noise Scale</label>
+            <input id="noiseScale" type="number" min="1" max="500" value="40">
 
-<main>
+            <button id="generateNoiseButton">Generate Map</button>
+        </div>
 
-    <div class="card">
-        <p>
-            This is where your first interactive demo will go.
-        </p>
+        <div class="preview">
+            <canvas id="noiseCanvas" width="300" height="300"></canvas>
+        </div>
     </div>
 
-</main>
+    <div class="code-block">
+<pre><code>public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, float scale)
+{
+    float[,] noiseMap = new float[mapWidth, mapHeight];
 
-</body>
-</html>
+    if (scale &lt;= 0)
+    {
+        scale = 0.0001f;
+    }
+
+    for (int y = 0; y &lt; mapHeight; y++)
+    {
+        for (int x = 0; x &lt; mapWidth; x++)
+        {
+            float sampleX = x / scale;
+            float sampleY = y / scale;
+
+            float perlinValue = Mathf.PerlinNoise(sampleX, sampleY);
+            noiseMap[x, y] = perlinValue;
+        }
+    }
+
+    return noiseMap;
+}</code></pre>
+    </div>
+</div>
