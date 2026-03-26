@@ -3,8 +3,11 @@
 
     <div class="step-card">
         <p>
-            This step shows a basic Perlin noise map. The preview uses a fixed size of
-            200 by 200 pixels. You can change the scale and seed to see how the pattern changes.
+            The first step in my procedural world development is to create a noise map using Perlin noise.
+            Perlin noise is a type of gradient noise that produces smooth, natural-looking textures.
+            It is commonly used in procedural generation to create terrain, clouds, and other organic patterns.
+            I have created a small interactive demo where you can adjust the noise scale and seed to see how it
+            affects the generated noise map.
         </p>
 
         <details class="demo-wrapper" open>
@@ -20,6 +23,14 @@
                         <input id="noiseSeed" type="range" min="0" max="100" value="0">
 
                         <button id="generateNoiseButton">Generate Map</button>
+
+                        <p>
+                            Adjust the noise scale to see how it affects the frequency of the noise pattern.
+                            A smaller scale will produce a more detailed noise map, while a larger scale will create a
+                            smoother, more gradual pattern.
+                            Changing the seed will generate a completely different noise map, allowing you to explore
+                            various terrain configurations.
+                        </p>
                     </div>
 
                     <div class="preview">
@@ -29,32 +40,118 @@
             </div>
         </details>
 
+        <p>
+            The Unity implementation for this first step is divided into three scripts.
+            Each script has a separate responsibility. `Noise.cs` generates the raw Perlin noise values,
+            `MapGenerator.cs` controls when the map should be generated, and `MapDisplay.cs` converts the
+            generated values into a visible texture on screen.
+        </p>
+
         <details class="code-wrapper">
             <summary class="code-summary">Show Unity code</summary>
 
+            <p>
+                <strong>Noise.cs</strong><br>
+                This script is responsible for generating the noise map itself. It creates a 2D float array,
+                loops through every coordinate, samples Perlin noise for each point, and stores the result.
+                The `scale` value affects how stretched or compressed the pattern becomes. A low scale creates
+                more variation in a smaller space, while a high scale creates smoother and broader shapes.
+            </p>
+
             <div class="code-block">
-<pre><code>public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, float scale)
+                <pre><code>public static class Noise
 {
-    float[,] noiseMap = new float[mapWidth, mapHeight];
-
-    if (scale &lt;= 0)
+    public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, float scale)
     {
-        scale = 0.0001f;
-    }
+        float[,] noiseMap = new float[mapWidth, mapHeight];
 
-    for (int y = 0; y &lt; mapHeight; y++)
-    {
-        for (int x = 0; x &lt; mapWidth; x++)
+        if (scale <= 0)
         {
-            float sampleX = x / scale;
-            float sampleY = y / scale;
-
-            float perlinValue = Mathf.PerlinNoise(sampleX, sampleY);
-            noiseMap[x, y] = perlinValue;
+            scale = 0.0001f;
         }
-    }
 
-    return noiseMap;
+        for (int y = 0; y < mapHeight; y++)
+        {
+            for (int x = 0; x < mapWidth; x++)
+            {
+                float sampleX = x / scale;
+                float sampleY = y / scale;
+
+                float perlinValue = Mathf.PerlinNoise(sampleX, sampleY);
+                noiseMap[x, y] = perlinValue;
+            }
+        }
+
+        return noiseMap;
+    }
+}</code></pre>
+            </div>
+
+            <p>
+                <strong>MapGenerator.cs</strong><br>
+                This script acts as the controller of the generation process. It requests a new noise map from
+                `Noise.cs` and then passes that result to `MapDisplay.cs`. This keeps the project structured:
+                one script generates data, another script decides when that happens, and another script handles
+                the visual output.
+            </p>
+
+            <div class="code-block">
+                <pre><code>using UnityEngine;
+
+public class MapGenerator : MonoBehaviour
+{
+    public int mapWidth = 200;
+    public int mapHeight = 200;
+    public float noiseScale = 40f;
+
+    public void GenerateMap()
+    {
+        float[,] noiseMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, noiseScale);
+
+        MapDisplay display = FindObjectOfType<MapDisplay>();
+        display.DrawNoiseMap(noiseMap);
+    }
+}</code></pre>
+            </div>
+
+            <p>
+                <strong>MapDisplay.cs</strong><br>
+                This script converts the generated float values into visible grayscale pixels. Each value in the
+                noise map is turned into a color, where lower values become darker and higher values become lighter.
+                After that, the color map is applied to a texture, which is then shown in the scene. This makes it
+                possible to immediately see the structure of the generated noise.
+            </p>
+
+            <div class="code-block">
+                <pre><code>using UnityEngine;
+
+public class MapDisplay : MonoBehaviour
+{
+    public Renderer textureRenderer;
+
+    public void DrawNoiseMap(float[,] noiseMap)
+    {
+        int width = noiseMap.GetLength(0);
+        int height = noiseMap.GetLength(1);
+
+        Texture2D texture = new Texture2D(width, height);
+        Color[] colorMap = new Color[width * height];
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                float value = noiseMap[x, y];
+                colorMap[y * width + x] = new Color(value, value, value);
+            }
+        }
+
+        texture.SetPixels(colorMap);
+        texture.Apply();
+
+        textureRenderer.sharedMaterial.mainTexture = texture;
+        textureRenderer.transform.localScale = new Vector3(width, 1, height);
+    }
 }</code></pre>
             </div>
         </details>
