@@ -1,8 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
 using Unity.VisualScripting;
 using UnityEngine;
-using System;
-using System.Threading;
-using System.Collections.Generic;
 
 public class MapGenerator : MonoBehaviour
 {
@@ -176,7 +176,12 @@ public class MapGenerator : MonoBehaviour
     // GetColor uses the height and temperature to determine the color of the pixel.
     public Color GetColor(float currentHeight, float currentTemperature)
     {
-        Color color = Color.red;
+        return GetBiome(currentHeight, currentTemperature).color;
+    }
+
+    public BiomeType GetBiome(float currentHeight, float currentTemperature)
+    {
+        BiomeType biomeType = new BiomeType();
         for (int i = 0; i < heightTypes.Length; i++)
         {
             if (currentHeight >= heightTypes[i].height)
@@ -185,12 +190,13 @@ public class MapGenerator : MonoBehaviour
                 {
                     if (currentTemperature >= heightTypes[i].biomeTypes[j].temperature)
                     {
-                        color = heightTypes[i].biomeTypes[j].color;
+                        biomeType = heightTypes[i].biomeTypes[j];
                     }
                 }
             }
         }
-        return color;
+
+        return biomeType;
     }
 }
 
@@ -209,6 +215,9 @@ public struct BiomeType
     public string name;
     public float temperature;
     public Color color;
+    public GameObject[] decorationPrefabs;
+    [Range(0f, 1f)]
+    public float decorationChance;
 }
 
 public struct MapData {
