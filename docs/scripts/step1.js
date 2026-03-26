@@ -52,23 +52,36 @@ function drawNoiseMap() {
 }
 
 function setupStep1() {
-    const button = document.getElementById("generateNoiseButton");
     const widthInput = document.getElementById("mapWidth");
     const heightInput = document.getElementById("mapHeight");
     const scaleInput = document.getElementById("noiseScale");
     const seedInput = document.getElementById("noiseSeed");
+    const button = document.getElementById("generateNoiseButton");
 
-    if (!button || !widthInput || !heightInput || !scaleInput || !seedInput) {
+    if (!widthInput || !heightInput || !scaleInput || !seedInput || !button) {
         return;
     }
 
-    button.addEventListener("click", drawNoiseMap);
-    widthInput.addEventListener("input", drawNoiseMap);
-    heightInput.addEventListener("input", drawNoiseMap);
-    scaleInput.addEventListener("input", drawNoiseMap);
-    seedInput.addEventListener("input", drawNoiseMap);
+    const inputs = [widthInput, heightInput, scaleInput, seedInput];
 
+    inputs.forEach(input => {
+        input.addEventListener("input", () => {
+            updateSliderValues();
+            drawNoiseMap();
+        });
+    });
+
+    button.addEventListener("click", drawNoiseMap);
+
+    updateSliderValues();
     drawNoiseMap();
 }
 
 window.addEventListener("stepsLoaded", setupStep1);
+
+function updateSliderValues() {
+    document.getElementById("widthValue").textContent = document.getElementById("mapWidth").value;
+    document.getElementById("heightValue").textContent = document.getElementById("mapHeight").value;
+    document.getElementById("scaleValue").textContent = document.getElementById("noiseScale").value;
+    document.getElementById("seedValue").textContent = document.getElementById("noiseSeed").value;
+}

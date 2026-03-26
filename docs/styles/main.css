@@ -172,3 +172,9 @@ body {
     padding: 20px;
     margin: 0;
 }
+
+input[type="range"] {
+    width: 100%;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
