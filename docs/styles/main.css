@@ -128,3 +128,47 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+.step-wrapper,
+.code-wrapper {
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 14px;
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+
+.step-summary,
+.code-summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 18px 20px;
+    font-weight: 700;
+    background: #172033;
+    user-select: none;
+}
+
+.step-summary::-webkit-details-marker,
+.code-summary::-webkit-details-marker {
+    display: none;
+}
+
+.step-summary::before,
+.code-summary::before {
+    content: "▶";
+    display: inline-block;
+    margin-right: 10px;
+    transition: transform 0.2s ease;
+}
+
+.step-wrapper[open] .step-summary::before,
+.code-wrapper[open] .code-summary::before {
+    transform: rotate(90deg);
+}
+
+.step-card {
+    background: #1f2937;
+    border-top: 1px solid #374151;
+    padding: 20px;
+    margin: 0;
+}
