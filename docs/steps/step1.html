@@ -9,17 +9,20 @@
 
         <div class="demo-layout">
             <div class="controls">
-                <label for="mapWidth">Map Width</label>
-                <input id="mapWidth" type="number" min="1" max="300" value="100">
+    <label for="mapWidth">Map Width</label>
+    <input id="mapWidth" type="number" min="1" max="300" value="100">
 
-                <label for="mapHeight">Map Height</label>
-                <input id="mapHeight" type="number" min="1" max="300" value="100">
+    <label for="mapHeight">Map Height</label>
+    <input id="mapHeight" type="number" min="1" max="300" value="100">
 
-                <label for="noiseScale">Noise Scale</label>
-                <input id="noiseScale" type="number" min="1" max="500" value="40">
+    <label for="noiseScale">Noise Scale</label>
+    <input id="noiseScale" type="number" min="1" max="500" value="40">
 
-                <button id="generateNoiseButton">Generate Map</button>
-            </div>
+    <label for="noiseSeed">Seed</label>
+    <input id="noiseSeed" type="number" value="0">
+
+    <button id="generateNoiseButton">Generate Map</button>
+</div>
 
             <div class="preview">
                 <canvas id="noiseCanvas" width="300" height="300"></canvas>
