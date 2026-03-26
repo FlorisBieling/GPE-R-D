@@ -7,21 +7,22 @@
             You can change the width, height and scale to see how the pattern changes.
         </p>
 
-        <div class="demo-layout">
-            <div class="controls">
-    <label for="mapWidth">Map Width</label>
-    <input id="mapWidth" type="number" min="1" max="300" value="100">
+        <div class="controls">
 
-    <label for="mapHeight">Map Height</label>
-    <input id="mapHeight" type="number" min="1" max="300" value="100">
+    <label>Map Width: <span id="widthValue">100</span></label>
+    <input id="mapWidth" type="range" min="100" max="1000" value="100">
 
-    <label for="noiseScale">Noise Scale</label>
-    <input id="noiseScale" type="number" min="1" max="500" value="40">
+    <label>Map Height: <span id="heightValue">100</span></label>
+    <input id="mapHeight" type="range" min="100" max="1000" value="100">
 
-    <label for="noiseSeed">Seed</label>
-    <input id="noiseSeed" type="number" value="0">
+    <label>Noise Scale: <span id="scaleValue">10</span></label>
+    <input id="noiseScale" type="range" min="5" max="200" value="10">
+
+    <label>Seed: <span id="seedValue">1</span></label>
+    <input id="noiseSeed" type="range" min="1" max="100" value="0">
 
     <button id="generateNoiseButton">Generate Map</button>
+
 </div>
 
             <div class="preview">
