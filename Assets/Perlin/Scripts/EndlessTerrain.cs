@@ -168,6 +168,14 @@ public class EndlessTerrain : MonoBehaviour
                         {
                             break;
                         }
+                        if (lodIndex == 0)
+                        {
+                            decorationObject.SetActive(true);
+                        }
+                        else
+                        {
+                            decorationObject.SetActive(false);
+                        }
                     }
 
                     if (lodIndex != previousLODIndex)

@@ -1,1 +1,43 @@
-Test
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Development</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <header class="site-header">
+        <h1>Procedural World Development</h1>
+        <p>Step-by-step interactive breakdown of the project</p>
+    </header>
+
+    <main class="container">
+        <section class="intro-card">
+            <h2>About this project</h2>
+            <p>
+                This page shows the development of my procedural world project.
+                Each step contains a small interactive example so the user can
+                change values and directly see what happens.
+            </p>
+        </section>
+
+        <section class="step-navigation">
+            <h2>Steps</h2>
+            <nav class="step-links">
+                <a href="#step1">Step 1: Perlin Noise</a>
+                <a href="#step2">Step 2</a>
+                <a href="#step3">Step 3</a>
+            </nav>
+        </section>
+
+        <section id="step1" class="step-container"></section>
+        <section id="step2" class="step-container"></section>
+        <section id="step3" class="step-container"></section>
+    </main>
+
+    <script src="scripts/main.js"></script>
+    <script src="scripts/lib/perlin.js"></script>
+    <script src="scripts/step1.js"></script>
+</body>
+</html>

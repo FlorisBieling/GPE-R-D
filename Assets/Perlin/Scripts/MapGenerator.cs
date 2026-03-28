@@ -137,7 +137,7 @@ public class MapGenerator : MonoBehaviour
     MapData GenerateMapData(Vector2 centre)
     {
         float[,] heightMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, centre + offset, normalizeMode);
-        float[,] temperatureMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed + 1, noiseScale*5f, octaves, persistance, lacunarity, centre + offset, normalizeMode);
+        float[,] temperatureMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed + 2, noiseScale*5f, octaves, persistance, lacunarity, centre + offset, normalizeMode);
         
         return new MapData(heightMap, temperatureMap, CombineMaps(heightMap, temperatureMap));
     }
