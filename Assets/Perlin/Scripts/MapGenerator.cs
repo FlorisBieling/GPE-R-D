@@ -220,14 +220,27 @@ public struct HeightTypes
 }
 
 [System.Serializable]
+public struct DecorationLayer
+{
+    public string name;
+    public GameObject[] prefabs;
+    [Range(0f, 1f)] public float spawnChance;
+    public float noiseScale;
+    [Range(0f, 1f)] public float noiseThreshold;
+    public float minDistance;
+    public int attemptsPerTile;
+    public Vector2 randomOffsetRange;
+    public Vector2 randomScaleRange;
+    public Vector2 noiseOffset;
+}
+
+[System.Serializable]
 public struct BiomeType
 {
     public string name;
     public float temperature;
     public Color color;
-    public GameObject[] decorationPrefabs;
-    [Range(0f, 1f)]
-    public float decorationChance;
+    public DecorationLayer[] decorationLayers;
 }
 
 public struct MapData {

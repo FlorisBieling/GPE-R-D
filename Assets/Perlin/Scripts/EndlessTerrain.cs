@@ -168,15 +168,9 @@ public class EndlessTerrain : MonoBehaviour
                         {
                             break;
                         }
-                        if (lodIndex == 0)
-                        {
-                            decorationObject.SetActive(true);
-                        }
-                        else
-                        {
-                            decorationObject.SetActive(false);
-                        }
                     }
+
+                    decorationObject.SetActive(lodIndex == 0);
 
                     if (lodIndex != previousLODIndex)
                     {
@@ -198,6 +192,47 @@ public class EndlessTerrain : MonoBehaviour
             }
         }
 
+        int GetMaxLayerCount()
+        {
+            int size = MapGenerator.mapChunkSize;
+            int maxLayerCount = 0;
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float currentHeight = mapData.heightMap[x, y];
+                    float currentTemperature = mapData.temperatureMap[x, y];
+
+                    BiomeType biome = mapGenerator.GetBiome(currentHeight, currentTemperature);
+
+                    if (biome.decorationLayers != null && biome.decorationLayers.Length > maxLayerCount)
+                    {
+                        maxLayerCount = biome.decorationLayers.Length;
+                    }
+                }
+            }
+
+            return maxLayerCount;
+        }
+
+        float GetNoiseValue(DecorationLayer layer, Vector3 worldPosition)
+        {
+            float scale = layer.noiseScale <= 0.0001f ? 0.0001f : layer.noiseScale;
+
+            return Mathf.PerlinNoise(
+                (worldPosition.x + layer.noiseOffset.x) / scale,
+                (worldPosition.z + layer.noiseOffset.y) / scale
+            );
+        }
+
+        string GetLayerKey(BiomeType biome, DecorationLayer layer, int layerIndex)
+        {
+            string biomeName = string.IsNullOrWhiteSpace(biome.name) ? "Biome" : biome.name;
+            string layerName = string.IsNullOrWhiteSpace(layer.name) ? $"Layer{layerIndex}" : layer.name;
+            return biomeName + "_" + layerName;
+        }
+
         void SpawnDecorations()
         {
             if (decorationsSpawned)
@@ -211,44 +246,80 @@ public class EndlessTerrain : MonoBehaviour
             float topLeftX = (size - 1) / -2f;
             float topLeftZ = (size - 1) / 2f;
 
-            for (int y = 0; y < size; y++)
+            int maxLayerCount = GetMaxLayerCount();
+            LayerSpawnCache spawnCache = new LayerSpawnCache();
+
+            for (int layerIndex = 0; layerIndex < maxLayerCount; layerIndex++)
             {
-                for (int x = 0; x < size; x++)
+                for (int y = 0; y < size; y++)
                 {
-                    float currentHeight = mapData.heightMap[x, y];
-                    float currentTemperature = mapData.temperatureMap[x, y];
-
-                    BiomeType biome = mapGenerator.GetBiome(currentHeight, currentTemperature);
-
-                    if (biome.decorationPrefabs == null || biome.decorationPrefabs.Length == 0)
+                    for (int x = 0; x < size; x++)
                     {
-                        continue;
+                        float currentHeight = mapData.heightMap[x, y];
+                        float currentTemperature = mapData.temperatureMap[x, y];
+
+                        BiomeType biome = mapGenerator.GetBiome(currentHeight, currentTemperature);
+
+                        if (biome.decorationLayers == null || layerIndex >= biome.decorationLayers.Length)
+                        {
+                            continue;
+                        }
+
+                        DecorationLayer layer = biome.decorationLayers[layerIndex];
+
+                        if (layer.prefabs == null || layer.prefabs.Length == 0)
+                        {
+                            continue;
+                        }
+
+                        int attempts = Mathf.Max(1, layer.attemptsPerTile);
+
+                        for (int attempt = 0; attempt < attempts; attempt++)
+                        {
+                            float offsetX = Random.Range(-layer.randomOffsetRange.x, layer.randomOffsetRange.x);
+                            float offsetZ = Random.Range(-layer.randomOffsetRange.y, layer.randomOffsetRange.y);
+
+                            float localX = topLeftX + x + offsetX;
+                            float localZ = topLeftZ - y + offsetZ;
+                            float localY = mapGenerator.GetMeshHeight(currentHeight);
+
+                            Vector3 localPosition = new Vector3(localX, localY, localZ);
+                            Vector3 worldPosition = meshObject.transform.TransformPoint(localPosition);
+
+                            float noiseValue = GetNoiseValue(layer, worldPosition);
+
+                            if (noiseValue < layer.noiseThreshold)
+                            {
+                                continue;
+                            }
+
+                            if (Random.value > layer.spawnChance)
+                            {
+                                continue;
+                            }
+
+                            string layerKey = GetLayerKey(biome, layer, layerIndex);
+
+                            if (!spawnCache.CanSpawn(layerKey, worldPosition, layer.minDistance))
+                            {
+                                continue;
+                            }
+
+                            GameObject prefabToSpawn = layer.prefabs[Random.Range(0, layer.prefabs.Length)];
+                            Quaternion localRotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
+
+                            GameObject spawnedObject = Object.Instantiate(prefabToSpawn, decorationParent);
+                            spawnedObject.transform.localPosition = localPosition;
+                            spawnedObject.transform.localRotation = localRotation;
+
+                            float minScale = Mathf.Min(layer.randomScaleRange.x, layer.randomScaleRange.y);
+                            float maxScale = Mathf.Max(layer.randomScaleRange.x, layer.randomScaleRange.y);
+                            float randomScale = Random.Range(minScale, maxScale);
+                            spawnedObject.transform.localScale = Vector3.one * randomScale;
+
+                            spawnCache.Register(layerKey, worldPosition);
+                        }
                     }
-
-                    if (Random.value > biome.decorationChance)
-                    {
-                        continue;
-                    }
-
-                    GameObject prefabToSpawn = biome.decorationPrefabs[Random.Range(0, biome.decorationPrefabs.Length)];
-
-                    float localX = topLeftX + x;
-                    float localZ = topLeftZ - y;
-                    float localY = mapGenerator.GetMeshHeight(currentHeight);
-
-                    Vector3 localPosition = new Vector3(localX, localY, localZ);
-
-                    localPosition += new Vector3(
-                        Random.Range(-0.35f, 0.35f),
-                        0f,
-                        Random.Range(-0.35f, 0.35f)
-                    );
-
-                    Quaternion localRotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
-
-                    GameObject spawnedObject = Object.Instantiate(prefabToSpawn, decorationParent);
-                    spawnedObject.transform.localPosition = localPosition;
-                    spawnedObject.transform.localRotation = localRotation;
                 }
             }
         }
@@ -301,6 +372,50 @@ public class EndlessTerrain : MonoBehaviour
         {
             this.lod = lod;
             this.visibleDistanceThreshold = visibleDistanceThreshold;
+        }
+    }
+
+    class LayerSpawnCache
+    {
+        Dictionary<string, List<Vector3>> positionsByLayer = new Dictionary<string, List<Vector3>>();
+
+        public bool CanSpawn(string key, Vector3 worldPosition, float minDistance)
+        {
+            if (minDistance <= 0f)
+            {
+                return true;
+            }
+
+            if (!positionsByLayer.TryGetValue(key, out List<Vector3> positions))
+            {
+                return true;
+            }
+
+            float minDistanceSqr = minDistance * minDistance;
+
+            for (int i = 0; i < positions.Count; i++)
+            {
+                Vector3 delta = positions[i] - worldPosition;
+                delta.y = 0f;
+
+                if (delta.sqrMagnitude < minDistanceSqr)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public void Register(string key, Vector3 worldPosition)
+        {
+            if (!positionsByLayer.TryGetValue(key, out List<Vector3> positions))
+            {
+                positions = new List<Vector3>();
+                positionsByLayer[key] = positions;
+            }
+
+            positions.Add(worldPosition);
         }
     }
 }
