@@ -1,41 +1,47 @@
 <details class="step-wrapper" open>
-    <summary class="step-summary">Step 4: Combining Height and Temperature</summary>
+  <summary class="step-summary">
+    Step 4: Combining Height and Temperature
+  </summary>
 
-    <div class="step-card">
-        <p>
-            In the previous step, the world was divided into simple terrain shapes using only height values.
-            That already made the map easier to read, but it also had a limitation:
-            areas with the same height would always be treated the same way.
-        </p>
+  <div class="step-card">
+    <p>
+      In the previous step, the world was divided into simple terrain shapes
+      using only height values. That already made the map easier to read, but it
+      also had a limitation: areas with the same height would always be treated
+      the same way.
+    </p>
 
-        <p>
-            In the Unity project, this is solved by generating not only a height map, but also a temperature map.
-            These two maps are then combined to decide which biome should appear at each position.
-        </p>
+    <p>
+      In the Unity project, this is solved by generating not only a height map,
+      but also a temperature map. These two maps are then combined to decide
+      which biome should appear at each position.
+    </p>
 
-        <h3>How This Works in the Project</h3>
+    <h3>How This Works in the Project</h3>
 
-        <p>
-            The height map determines the overall structure of the world.
-            The temperature map adds another layer of information.
-            This means that two areas with the same height can still become different biomes if their temperature is different.
-        </p>
+    <p>
+      The height map determines the overall structure of the world. The
+      temperature map adds another layer of information. This means that two
+      areas with the same height can still become different biomes if their
+      temperature is different.
+    </p>
 
-        <p>
-            For example, high terrain can become a cold snowy biome or a warmer rocky biome,
-            while medium-height land can become greener or drier depending on the temperature.
-        </p>
+    <p>
+      For example, high terrain can become a cold snowy biome or a warmer rocky
+      biome, while medium-height land can become greener or drier depending on
+      the temperature.
+    </p>
 
-        <h3>How This Works in Unity</h3>
+    <h3>How This Works in Unity</h3>
 
-        <p>
-            In the project, both maps are generated separately.
-            The temperature map uses the same noise system as the height map,
-            but with a different seed and a much larger scale.
-        </p>
+    <p>
+      In the project, both maps are generated separately. The temperature map
+      uses the same noise system as the height map, but with a different seed
+      and a much larger scale.
+    </p>
 
-        <div class="code-block">
-<pre><code>float[,] heightMap = Noise.GenerateNoiseMap(
+    <div class="code-block">
+      <pre><code>float[,] heightMap = Noise.GenerateNoiseMap(
     mapChunkSize,
     mapChunkSize,
     seed,
@@ -58,83 +64,93 @@ float[,] temperatureMap = Noise.GenerateNoiseMap(
     centre + offset,
     normalizeMode
 );</code></pre>
-        </div>
+    </div>
 
-        <p>
-            After that, both values are read at the same position and passed into the biome system.
-        </p>
+    <p>
+      After that, both values are read at the same position and passed into the
+      biome system.
+    </p>
 
-        <div class="code-block">
-<pre><code>float currentHeight = heightMap[x, y];
+    <div class="code-block">
+      <pre><code>float currentHeight = heightMap[x, y];
 float currentTemperature = temperatureMap[x, y];
 colorMap[y * mapChunkSize + x] = GetColor(currentHeight, currentTemperature);</code></pre>
-        </div>
-
-        <h3>What This Means</h3>
-
-        <p>
-            Height and temperature each describe a different property of the world.
-            Height controls where terrain is low or high, while temperature changes what kind of biome fits that area.
-        </p>
-
-        <p>
-            This makes the world more varied and believable,
-            because the final biome is no longer based on just one value.
-        </p>
-
-        <h3>Interactive Demo</h3>
-
-        <p>
-            In the comparison view below, the left side shows the height map and the right side shows the temperature map.
-            You can drag the vertical slider to compare them.
-            The biome map on the right shows the final result created by combining both maps.
-        </p>
-
-        <details class="demo-wrapper" open>
-            <summary class="demo-summary">Show demo</summary>
-
-            <div class="demo-content">
-                <div class="step4-layout">
-                    <div class="step4-preview-column">
-                        <h4>Height and Temperature Comparison</h4>
-
-                        <div class="comparison-wrapper">
-                            <canvas id="comparisonCanvas4" width="420" height="420"></canvas>
-                            <input
-                                id="comparisonSlider4"
-                                class="comparison-slider-vertical"
-                                type="range"
-                                min="0"
-                                max="100"
-                                value="50"
-                            >
-                        </div>
-                    </div>
-
-                    <div class="step4-preview-column">
-                        <h4>Final Biome Map</h4>
-                        <canvas id="biomeCanvas4" width="420" height="420"></canvas>
-                    </div>
-                </div>
-            </div>
-        </details>
-
-        <h3>Why This Is Useful</h3>
-
-        <p>
-            A single map can create the basic structure of a world,
-            but combining multiple maps makes it possible to create more interesting regions.
-            Height gives the world its shape, while temperature adds variation within that shape.
-        </p>
-
-        <p>
-            This is an important step, because it moves the project away from simple terrain categories
-            and towards a real biome system.
-        </p>
-
-        <p>
-            In the next step, this data can be used as the basis for actual world generation in Unity,
-            where the generated maps are no longer only visualized, but also used to build the terrain itself.
-        </p>
     </div>
+
+    <h3>What This Means</h3>
+
+    <p>
+      Height and temperature each describe a different property of the world.
+      Height controls where terrain is low or high, while temperature changes
+      what kind of biome fits that area.
+    </p>
+
+    <p>
+      This makes the world more varied and believable, because the final biome
+      is no longer based on just one value.
+    </p>
+
+    <h3>Interactive Demo</h3>
+
+    <p>
+      In the comparison view below, the left image shows the height map on one
+      side and the temperature map on the other side, based on the slider
+      position. The result image shows terrain based only on height on one side,
+      and the final biome result with temperature added on the other side.
+    </p>
+
+    <details class="demo-wrapper" open>
+      <summary class="demo-summary">Show demo</summary>
+
+      <div class="demo-content">
+        <div class="step4-layout">
+          <div class="step4-preview-column">
+            <h4>Height and Temperature Comparison</h4>
+
+            <div class="comparison-wrapper">
+              <canvas id="comparisonCanvas4" width="420" height="420"></canvas>
+            </div>
+
+            <input
+              id="comparisonSlider4"
+              class="comparison-slider-horizontal"
+              type="range"
+              min="0"
+              max="100"
+              value="50"
+            />
+          </div>
+
+          <div class="step4-preview-column">
+            <h4>Height Only vs Height + Temperature</h4>
+            <canvas id="biomeCanvas4" width="420" height="420"></canvas>
+
+            <button id="generateStep4Button" class="generate-button">
+              Generate New Map
+            </button>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <h3>Why This Is Useful</h3>
+
+    <p>
+      A single map can create the basic structure of a world, but combining
+      multiple maps makes it possible to create more interesting regions. Height
+      gives the world its shape, while temperature adds variation within that
+      shape.
+    </p>
+
+    <p>
+      This is an important step, because it moves the project away from simple
+      terrain categories and towards a real biome system.
+    </p>
+
+    <p>
+      In the next step, this data can be used as the basis for actual world
+      generation in Unity, where the generated maps are no longer only
+      visualized, but also used to build the terrain itself.
+    </p>
+  </div>
 </details>

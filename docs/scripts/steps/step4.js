@@ -1,3 +1,5 @@
+let step4Cache = null;
+
 function generateStep4LayerMap(width, height, config) {
     const values = new Array(width * height);
     let minNoiseHeight = Infinity;
@@ -47,37 +49,20 @@ function generateStep4LayerMap(width, height, config) {
     return values;
 }
 
-function drawStep4ComparisonMap(canvas, heightValues, temperatureValues, sliderPercent) {
-    const width = canvas.width;
-    const height = canvas.height;
-    const ctx = canvas.getContext("2d");
-    const imageData = ctx.createImageData(width, height);
-
-    const splitX = Math.floor((sliderPercent / 100) * width);
-
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            const index = y * width + x;
-            const pixelIndex = index * 4;
-
-            const value = x < splitX ? heightValues[index] : temperatureValues[index];
-            const color = Math.floor(value * 255);
-
-            imageData.data[pixelIndex] = color;
-            imageData.data[pixelIndex + 1] = color;
-            imageData.data[pixelIndex + 2] = color;
-            imageData.data[pixelIndex + 3] = 255;
-        }
+function getHeightOnlyTerrainColor(heightValue) {
+    if (heightValue < 0.28) {
+        return [58, 119, 201];
     }
 
-    ctx.putImageData(imageData, 0, 0);
+    if (heightValue < 0.36) {
+        return [224, 211, 154];
+    }
 
-    ctx.strokeStyle = "#ffffff";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(splitX, 0);
-    ctx.lineTo(splitX, height);
-    ctx.stroke();
+    if (heightValue < 0.68) {
+        return [76, 166, 76];
+    }
+
+    return [130, 130, 130];
 }
 
 function getStep4BiomeColor(heightValue, temperatureValue) {
@@ -114,32 +99,76 @@ function getStep4BiomeColor(heightValue, temperatureValue) {
     return [130, 130, 130];
 }
 
-function drawStep4BiomeMap(canvas, heightValues, temperatureValues) {
+function drawSplitLine(ctx, splitX, height) {
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(splitX, 0);
+    ctx.lineTo(splitX, height);
+    ctx.stroke();
+}
+
+function drawStep4ComparisonMap(canvas, heightValues, temperatureValues, sliderPercent) {
     const width = canvas.width;
     const height = canvas.height;
     const ctx = canvas.getContext("2d");
     const imageData = ctx.createImageData(width, height);
 
-    for (let i = 0; i < heightValues.length; i++) {
-        const color = getStep4BiomeColor(heightValues[i], temperatureValues[i]);
-        const pixelIndex = i * 4;
+    const splitX = Math.floor((sliderPercent / 100) * width);
 
-        imageData.data[pixelIndex] = color[0];
-        imageData.data[pixelIndex + 1] = color[1];
-        imageData.data[pixelIndex + 2] = color[2];
-        imageData.data[pixelIndex + 3] = 255;
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const index = y * width + x;
+            const pixelIndex = index * 4;
+
+            const value = x < splitX ? heightValues[index] : temperatureValues[index];
+            const color = Math.floor(value * 255);
+
+            imageData.data[pixelIndex] = color;
+            imageData.data[pixelIndex + 1] = color;
+            imageData.data[pixelIndex + 2] = color;
+            imageData.data[pixelIndex + 3] = 255;
+        }
     }
 
     ctx.putImageData(imageData, 0, 0);
+    drawSplitLine(ctx, splitX, height);
 }
 
-function buildStep4Maps() {
+function drawStep4ResultMap(canvas, heightValues, temperatureValues, sliderPercent) {
+    const width = canvas.width;
+    const height = canvas.height;
+    const ctx = canvas.getContext("2d");
+    const imageData = ctx.createImageData(width, height);
+
+    const splitX = Math.floor((sliderPercent / 100) * width);
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const index = y * width + x;
+            const pixelIndex = index * 4;
+
+            const color = x < splitX
+                ? getHeightOnlyTerrainColor(heightValues[index])
+                : getStep4BiomeColor(heightValues[index], temperatureValues[index]);
+
+            imageData.data[pixelIndex] = color[0];
+            imageData.data[pixelIndex + 1] = color[1];
+            imageData.data[pixelIndex + 2] = color[2];
+            imageData.data[pixelIndex + 3] = 255;
+        }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    drawSplitLine(ctx, splitX, height);
+}
+
+function buildStep4Data() {
     const comparisonCanvas = document.getElementById("comparisonCanvas4");
     const biomeCanvas = document.getElementById("biomeCanvas4");
-    const slider = document.getElementById("comparisonSlider4");
 
-    if (!comparisonCanvas || !biomeCanvas || !slider || typeof noise === "undefined") {
-        return;
+    if (!comparisonCanvas || !biomeCanvas || typeof noise === "undefined") {
+        return null;
     }
 
     const width = comparisonCanvas.width;
@@ -165,25 +194,97 @@ function buildStep4Maps() {
         scale: 400
     });
 
+    return {
+        heightValues,
+        temperatureValues
+    };
+}
+
+function renderStep4() {
+    const comparisonCanvas = document.getElementById("comparisonCanvas4");
+    const biomeCanvas = document.getElementById("biomeCanvas4");
+    const slider = document.getElementById("comparisonSlider4");
+
+    if (!comparisonCanvas || !biomeCanvas || !slider || !step4Cache) {
+        return;
+    }
+
+    const sliderPercent = parseFloat(slider.value);
+
     drawStep4ComparisonMap(
         comparisonCanvas,
-        heightValues,
-        temperatureValues,
-        parseFloat(slider.value)
+        step4Cache.heightValues,
+        step4Cache.temperatureValues,
+        sliderPercent
     );
 
-    drawStep4BiomeMap(biomeCanvas, heightValues, temperatureValues);
+    drawStep4ResultMap(
+        biomeCanvas,
+        step4Cache.heightValues,
+        step4Cache.temperatureValues,
+        sliderPercent
+    );
 }
 
 function setupStep4() {
     const slider = document.getElementById("comparisonSlider4");
+    const button = document.getElementById("generateStep4Button");
 
-    if (!slider) {
+    if (!slider || !button || typeof noise === "undefined") {
         return;
     }
 
-    buildStep4Maps();
-    slider.addEventListener("input", buildStep4Maps);
+    step4Cache = buildStep4Data();
+
+    if (!step4Cache) {
+        return;
+    }
+
+    renderStep4();
+
+    slider.addEventListener("input", renderStep4);
+    button.addEventListener("click", generateNewStep4Map);
+}
+
+function generateNewStep4Map() {
+    const comparisonCanvas = document.getElementById("comparisonCanvas4");
+
+    if (!comparisonCanvas || typeof noise === "undefined") {
+        return;
+    }
+
+    const width = comparisonCanvas.width;
+    const height = comparisonCanvas.height;
+
+    const baseSettings = {
+        octaves: 4,
+        persistence: 0.5,
+        lacunarity: 2,
+        offsetX: 0,
+        offsetY: 0
+    };
+
+    const randomSeed1 = Math.floor(Math.random() * 10000);
+    const randomSeed2 = Math.floor(Math.random() * 10000);
+
+    const heightValues = generateStep4LayerMap(width, height, {
+        ...baseSettings,
+        seed: randomSeed1,
+        scale: 80
+    });
+
+    const temperatureValues = generateStep4LayerMap(width, height, {
+        ...baseSettings,
+        seed: randomSeed2,
+        scale: 400
+    });
+
+    step4Cache = {
+        heightValues,
+        temperatureValues
+    };
+
+    renderStep4();
 }
 
 window.addEventListener("stepsLoaded", setupStep4);
