@@ -25,6 +25,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     await loadStep("step2", "steps/step2.html");
     await loadStep("step3", "steps/step3.html");
     await loadStep("step4", "steps/step4.html");
+    await loadStep("step5", "steps/step5.html");
 
     window.dispatchEvent(new Event("stepsLoaded"));
 });
