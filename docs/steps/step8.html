@@ -1,0 +1,190 @@
+<details class="step-wrapper" open>
+    <summary class="step-summary">Step 8: Multithreading</summary>
+
+    <div class="step-card">
+        <p>
+            In the previous step, multiple techniques were introduced to reduce the workload
+            of procedural generation.
+            One of the most powerful techniques is multithreading,
+            which allows heavy calculations to run separately from the main Unity thread.
+        </p>
+
+        <p>
+            To understand why this matters, it is important to first understand how Unity handles execution.
+        </p>
+
+        <h3>Main Thread vs Worker Threads</h3>
+
+        <p>
+            Unity uses a main thread to handle almost everything:
+            rendering, updating objects, physics, and most engine-related operations.
+            This means that if too much work is done on the main thread,
+            the frame rate will drop.
+        </p>
+
+        <p>
+            Multithreading introduces additional threads, often called worker threads.
+            These threads can perform calculations independently from the main thread.
+        </p>
+
+        <p>
+            In this project, this separation is used to move expensive calculations away from rendering.
+        </p>
+
+        <h3>What Can and Cannot Run on Threads</h3>
+
+        <p>
+            Not all code can safely run on a separate thread.
+        </p>
+
+        <p>
+            Calculations that only work with data can be moved to worker threads.
+            This includes:
+        </p>
+
+        <p>
+            - noise generation<br>
+            - biome calculations<br>
+            - decoration spawn data generation<br>
+            - mesh data generation (vertices, triangles, UVs)
+        </p>
+
+        <p>
+            However, Unity objects cannot be accessed from worker threads.
+            This means the following must stay on the main thread:
+        </p>
+
+        <p>
+            - creating GameObjects<br>
+            - modifying transforms<br>
+            - assigning meshes or materials<br>
+        </p>
+
+        <p>
+            Because of this, the system must split work into two parts:
+            calculation and application.
+        </p>
+
+        <h3>How Multithreading Is Used in This Project</h3>
+
+        <p>
+            In this project, map generation is performed on a worker thread.
+            Instead of directly generating data on the main thread,
+            a request is created and processed in the background.
+        </p>
+
+        <div class="code-block">
+<pre><code>public void RequestMapData(Vector2 centre, Action<MapData> callback)
+{
+    ThreadStart threadStart = delegate
+    {
+        MapDataThread(centre, callback);
+    };
+
+    new Thread(threadStart).Start();
+}</code></pre>
+        </div>
+
+        <p>
+            The worker thread generates the data and stores the result in a queue.
+        </p>
+
+        <div class="code-block">
+<pre><code>void MapDataThread(Vector2 centre, Action<MapData> callback)
+{
+    MapData mapData = GenerateMapData(centre);
+
+    lock (mapDataThreadInfoQueue)
+    {
+        mapDataThreadInfoQueue.Enqueue(new MapThreadInfo&lt;MapData&gt;(callback, mapData));
+    }
+}</code></pre>
+        </div>
+
+        <p>
+            This ensures that the heavy calculations do not block the main thread.
+        </p>
+
+        <h3>Returning Data to the Main Thread</h3>
+
+        <p>
+            Because Unity objects can only be modified on the main thread,
+            the generated data must be returned safely.
+        </p>
+
+        <p>
+            This is done using a queue that is processed during the Update loop.
+        </p>
+
+        <div class="code-block">
+<pre><code>void Update()
+{
+    lock (mapDataThreadInfoQueue)
+    {
+        while (mapDataThreadInfoQueue.Count > 0)
+        {
+            MapThreadInfo&lt;MapData&gt; threadInfo = mapDataThreadInfoQueue.Dequeue();
+            threadInfo.callback(threadInfo.parameter);
+        }
+    }
+}</code></pre>
+        </div>
+
+        <p>
+            The callback is then executed on the main thread,
+            where it is safe to create meshes, textures, and objects.
+        </p>
+
+        <h3>Applying the Result in Unity</h3>
+
+        <p>
+            Once the data is returned, it can be used to build the world.
+            For example, meshes can be generated and assigned,
+            and textures can be applied to represent the biome result.
+        </p>
+
+        <p>
+            This step is where the system transitions from background computation
+            back to visible results in the scene.
+        </p>
+
+        <h3>The Full Flow</h3>
+
+        <p>
+            The complete process can be summarized as follows:
+        </p>
+
+        <p>
+            1. Request generation of map data<br>
+            2. Perform calculations on a worker thread<br>
+            3. Store results in a thread-safe queue<br>
+            4. Retrieve results on the main thread<br>
+            5. Apply results to Unity objects
+        </p>
+
+        <p>
+            This structure allows the system to handle heavy calculations
+            without interrupting rendering or gameplay.
+        </p>
+
+        <h3>Why This Is Important</h3>
+
+        <p>
+            Without multithreading, generating terrain, meshes, and decorations
+            would all happen on the main thread.
+            This would quickly lead to frame drops or freezing,
+            especially when generating multiple chunks.
+        </p>
+
+        <p>
+            By moving the expensive parts of the system to worker threads,
+            the main thread remains responsive,
+            making real-time procedural generation possible.
+        </p>
+
+        <p>
+            In the next step, the project will be concluded
+            by reflecting on the results, limitations, and possible improvements.
+        </p>
+    </div>
+</details>
