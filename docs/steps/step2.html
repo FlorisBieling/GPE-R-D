@@ -51,10 +51,11 @@
     </p>
 
     <p>
-      - If persistence is low, each new layer quickly becomes weaker, so only
-      the large shapes remain visible<br />
-      - If persistence is high, the smaller details stay strong and become more
-      noticeable
+      If persistence is low, each new layer becomes much weaker, <br />
+      so the terrain is mostly defined by the large shapes.<br />
+
+      If persistence is high, the smaller details remain strong,<br />
+      making the terrain look more rough and detailed.<br />
     </p>
 
     <h4>Lacunarity</h4>
@@ -65,10 +66,10 @@
     </p>
 
     <p>
-      - If lacunarity is low, the layers look more similar to each other and the
-      terrain stays smooth<br />
-      - If lacunarity is high, each new layer has much smaller features,
-      creating rough and detailed patterns<br />
+      If lacunarity is low, the layers are more similar in size, <br />
+      which keeps the terrain smooth.<br />
+      If lacunarity is high, each new layer becomes much smaller, <br />
+      which creates sharper and more detailed patterns.<br />
     </p>
 
     <p>
@@ -77,14 +78,15 @@
     </p>
 
     <p>
-      - Octaves decide how many layers you add<br />
-      - Persistence decides how visible each layer is<br />
-      - Lacunarity decides how different each layer looks
+      Octaves decide how many layers you add.<br />
+      Persistence decides how visible each layer is.<br />
+      Lacunarity decides how different each layer looks.
     </p>
 
     <p>
       Because of this combination, the terrain is no longer just one smooth
-      pattern, but a mix of large shapes and small details.
+      pattern, but a mix of large shapes and small details, as you will see in
+      the demo after the code is shown and explained.
     </p>
 
     <!-- UNITY CODE -->
@@ -177,12 +179,16 @@ for (int i = 0; i < octaves; i++)
               step="0.1"
               value="2"
             />
+            <p>
+              Try increasing the octaves to see how more detail is added, and
+              adjust persistence to control how visible that detail becomes.
+            </p>
 
             <button id="generateNoiseButton2">Generate Map</button>
           </div>
 
           <div class="preview">
-            <canvas id="noiseCanvas2" width="400" height="400"></canvas>
+            <canvas id="noiseCanvas2" width="500" height="500"></canvas>
           </div>
         </div>
       </div>
@@ -192,7 +198,7 @@ for (int i = 0; i < octaves; i++)
     <h3>Why This Is Useful</h3>
 
     <p>
-      Using only one layer of noise often creates terrain that looks too simple.
+      Using only one layer of noise often creates terrain that looks too simple and unrealistic.
       By combining multiple layers, it becomes possible to create terrain that
       has both large overall shapes and smaller local variation.
     </p>
