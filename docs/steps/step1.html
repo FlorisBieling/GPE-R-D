@@ -2,18 +2,150 @@
     <summary class="step-summary">Step 1: Perlin Noise</summary>
 
     <div class="step-card">
+
+        <!-- INTRO -->
         <p>
-            The first step in my procedural world development is to create a noise map using Perlin noise.
-            Perlin noise is a type of gradient noise that produces smooth, natural-looking textures.
-            It is commonly used in procedural generation to create terrain, clouds, and other organic patterns.
+            The first step in this project is generating a noise map using Perlin noise.
+            Instead of assigning completely random values, Perlin noise creates smooth transitions between values.
+            This makes it useful for things like terrain generation, where abrupt changes would look unnatural.
         </p>
 
         <p>
-            Below is an interactive demo where you can adjust the noise scale and seed to see how it
-            affects the generated noise map. The preview uses a fixed resolution of 200 by 200 pixels.
+            In this project, each position on the map gets a value that represents height.
+            These values are later used to create terrains and biomes, and could be used for other world features in the future.
+        </p>
+
+        <!-- HOW IT WORKS -->
+        <h3>How Perlin Noise Works</h3>
+
+        <p>
+            Perlin noise works by dividing space into a grid. Each grid point influences the surrounding area.
+            Instead of random values, nearby positions produce similar results, which creates smooth patterns.
+        </p>
+
+        <p>
+            For every position:
+        </p>
+
+        <p>
+            1. The surrounding grid points are determined<br>
+            2. A value is calculated based on distance and direction<br>
+            3. The results are blended together smoothly
+        </p>
+
+        <p>
+            This results in a continuous surface instead of random noise.
+        </p>
+
+        <!-- UNITY CODE -->
+        <h3>Noise Generation in Unity</h3>
+
+        <p>
+            Below is the actual implementation used in Unity to generate the noise map.
+            It loops over every position and calculates a height value using multiple layers (octaves) of Perlin noise.
+        </p>
+
+        <div class="code-block">
+<pre><code>public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, int seed, float scale, int octaves, float persistance, float lacunarity, Vector2 offset)
+{
+    float[,] noiseMap = new float[mapWidth, mapHeight];
+
+    System.Random prng = new System.Random(seed);
+    Vector2[] octaveOffsets = new Vector2[octaves];
+
+    float amplitude = 1;
+    float frequency = 1;
+
+    for (int i = 0; i < octaves; i++)
+    {
+        float offsetX = prng.Next(-100000, 100000) + offset.x;
+        float offsetY = prng.Next(-100000, 100000) - offset.y;
+        octaveOffsets[i] = new Vector2(offsetX, offsetY);
+
+        amplitude *= persistance;
+    }
+
+    if (scale <= 0)
+    {
+        scale = 0.0001f;
+    }
+
+    float halfWidth = mapWidth / 2f;
+    float halfHeight = mapHeight / 2f;
+
+    for (int y = 0; y < mapHeight; y++)
+    {
+        for (int x = 0; x < mapWidth; x++)
+        {
+            amplitude = 1;
+            frequency = 1;
+            float noiseHeight = 0;
+
+            for (int i = 0; i < octaves; i++)
+            {
+                float sampleX = (x - halfWidth + octaveOffsets[i].x) / scale * frequency;
+                float sampleY = (y - halfHeight + octaveOffsets[i].y) / scale * frequency;
+
+                float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
+                noiseHeight += perlinValue * amplitude;
+
+                amplitude *= persistance;
+                frequency *= lacunarity;
+            }
+
+            noiseMap[x, y] = noiseHeight;
+        }
+    }
+
+    return noiseMap;
+}</code></pre>
+        </div>
+
+        <!-- CODE EXPLANATION -->
+        <h3>What This Code Does</h3>
+        
+        <p>
+            Now this is a lot code code. For now, let's focus on the basics of how the noise map is generated.
+        </p>
+
+        <p>
+            The code loops over every position in the map and calculates a noise value.
+            Each position is converted into noise coordinates using the scale value.
+        </p>
+
+        <p>
+            The important part is:
+        </p>
+
+        <div class="code-block">
+<pre><code>float sampleX = (x - halfWidth) / scale;
+float sampleY = (y - halfHeight) / scale;</code></pre>
+        </div>
+
+        <p>
+            The scale determines how detailed the noise is:
+        </p>
+
+        <p>
+            - Small scale = more detail<br>
+            - Large scale = smoother terrain
+        </p>
+
+        <p>
+            There are a lot of other things going on in the code, such as octaves,
+            persistence, and lacunarity, which add more layers of noise to create more complex terrain.
+            This will be explained further in the next step.
         </p>
 
         <!-- DEMO -->
+        <h3>Interactive Demo</h3>
+
+        <p>
+            For now, we can take a look at a simple demo to see how changing the scale and
+            seed affects the noise map. Changing the scale will make the terrain more or 
+            less detailed, while changing the seed will produce a completely different map.
+        </p>
+
         <details class="demo-wrapper" open>
             <summary class="demo-summary">Show demo</summary>
 
@@ -29,11 +161,6 @@
 
                         <button id="generateNoiseButton">Generate Map</button>
 
-                        <p>
-                            A smaller scale produces more detailed patterns, while a larger scale results
-                            in smoother transitions. Changing the seed generates a completely new noise map.
-                        </p>
-
                     </div>
 
                     <div class="preview">
@@ -43,117 +170,25 @@
             </div>
         </details>
 
-        <!-- EXPLANATION -->
+        <!-- USE CASE -->
+        <h3>Why This Is Useful</h3>
+
         <p>
-            The Unity implementation for this step is split into three scripts.
-            Each script has a clear responsibility: generating the noise values,
-            controlling when the map is created, and displaying the result visually.
+            Perlin noise creates structured randomness, which makes it ideal for procedural generation.
+            It is commonly used for:
         </p>
 
-        <!-- CODE -->
-        <details class="code-wrapper">
-            <summary class="code-summary">Show Unity code</summary>
+        <p>
+            - Terrain height maps<br>
+            - Biome generation<br>
+            - Clouds and fog<br>
+            - Procedural textures
+        </p>
 
-            <p>
-                <strong>Noise.cs</strong><br>
-                This script generates the actual Perlin noise map by looping over every position
-                and sampling Unity’s <code>Mathf.PerlinNoise</code>.
-            </p>
+        <p>
+            In the next step, we will take the noise map generated in this step and look at the other parameters
+            that can be used to create more interesting and varied terrain, like octaves, persistence, and lacunarity.
+        </p>
 
-            <div class="code-block">
-<pre><code>using UnityEngine;
-
-public static class Noise
-{
-    public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, float scale)
-    {
-        float[,] noiseMap = new float[mapWidth, mapHeight];
-
-        if (scale &lt;= 0)
-        {
-            scale = 0.0001f;
-        }
-
-        for (int y = 0; y &lt; mapHeight; y++)
-        {
-            for (int x = 0; x &lt; mapWidth; x++)
-            {
-                float sampleX = x / scale;
-                float sampleY = y / scale;
-
-                float perlinValue = Mathf.PerlinNoise(sampleX, sampleY);
-                noiseMap[x, y] = perlinValue;
-            }
-        }
-
-        return noiseMap;
-    }
-}</code></pre>
-            </div>
-
-            <p>
-                <strong>MapGenerator.cs</strong><br>
-                This script controls when the noise map is generated and passes it to the display.
-            </p>
-
-            <div class="code-block">
-<pre><code>using UnityEngine;
-
-public class MapGenerator : MonoBehaviour
-{
-    public int mapWidth;
-    public int mapHeight;
-    public float noiseScale;
-
-    public bool autoUpdate;
-
-    public void GenerateMap()
-    {
-        float[,] noiseMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, noiseScale);
-
-        MapDisplay display = FindObjectOfType&lt;MapDisplay&gt;();
-        display.DrawNoiseMap(noiseMap);
-    }
-}</code></pre>
-            </div>
-
-            <p>
-                <strong>MapDisplay.cs</strong><br>
-                This script converts the noise values into a visible grayscale texture.
-            </p>
-
-            <div class="code-block">
-<pre><code>using UnityEngine;
-
-public class MapDisplay : MonoBehaviour
-{
-    public Renderer textureRenderer;
-
-    public void DrawNoiseMap(float[,] noiseMap)
-    {
-        int width = noiseMap.GetLength(0);
-        int height = noiseMap.GetLength(1);
-
-        Texture2D texture = new Texture2D(width, height);
-        Color[] colorMap = new Color[width * height];
-
-        for (int y = 0; y &lt; height; y++)
-        {
-            for (int x = 0; x &lt; width; x++)
-            {
-                colorMap[y * width + x] = Color.Lerp(Color.black, Color.white, noiseMap[x, y]);
-            }
-        }
-
-        texture.SetPixels(colorMap);
-        texture.Apply();
-
-        textureRenderer.sharedMaterial.mainTexture = texture;
-        textureRenderer.transform.localScale = new Vector3(width, 1, height);
-    }
-}</code></pre>
-            </div>
-
-        </details>
     </div>
 </details>
