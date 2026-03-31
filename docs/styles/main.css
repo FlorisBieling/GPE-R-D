@@ -100,7 +100,9 @@ body {
     align-items: center;
 }
 
-#noiseCanvas {
+#noiseCanvas,
+#noiseCanvas2,
+#noiseCanvas3 {
     width: 100%;
     max-width: 420px;
     aspect-ratio: 1 / 1;
@@ -215,4 +217,28 @@ input[type="range"] {
     width: 100%;
     margin-bottom: 10px;
     cursor: pointer;
+}
+
+#heightCanvas4,
+#temperatureCanvas4,
+#biomeCanvas4 {
+    width: 100%;
+    max-width: 300px;
+    aspect-ratio: 1 / 1;
+    border: 1px solid #4b5563;
+    border-radius: 10px;
+    background: #000000;
+}
+
+.preview-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+
+.preview-block h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    text-align: center;
 }

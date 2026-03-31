@@ -1,7 +1,163 @@
-<details class="step-wrapper">
-    <summary class="step-summary">Step 3</summary>
+<details class="step-wrapper" open>
+    <summary class="step-summary">Step 3: From Noise to Terrain Shapes</summary>
 
     <div class="step-card">
-        <p>This step will be added later.</p>
+
+        <h3>Intro</h3>
+
+        <p>
+            In the previous steps, the generated map was only shown as grayscale.
+            This was useful to understand the structure of the noise, but it did not yet clearly show what the map represented.
+            In this step, the noise values are interpreted as height values.
+        </p>
+
+        <p>
+            This means that low values can represent water, slightly higher values can represent beaches,
+            and high values can represent mountains.
+            Instead of looking at the map as black and white pixels, it now becomes possible to read it as a simple terrain layout.
+        </p>
+
+        <h3>How Height Thresholds Work</h3>
+
+        <p>
+            A noise map is basically a grid of values between 0 and 1.
+            On their own, these values do not mean anything yet.
+            A threshold is a chosen boundary that decides how a value should be interpreted.
+        </p>
+
+        <p>
+            For example:
+        </p>
+
+        <p>
+            - values below 0.35 can be water<br>
+            - values between 0.35 and 0.42 can be beach<br>
+            - values between 0.42 and 0.70 can be grass<br>
+            - values above 0.70 can be mountain
+        </p>
+
+        <p>
+            This makes it possible to turn one noise map into different terrain types.
+            The map is still generated from the same noise system, but it becomes much easier to understand visually.
+        </p>
+
+        <h3>How This Works in Unity</h3>
+
+        <p>
+            In Unity, this is often done by checking the height value and assigning a color or terrain type based on it.
+            The following example shows the basic idea.
+        </p>
+
+        <div class="code-block">
+<pre><code>for (int y = 0; y < mapHeight; y++)
+{
+    for (int x = 0; x < mapWidth; x++)
+    {
+        float currentHeight = noiseMap[x, y];
+
+        if (currentHeight < 0.35f)
+        {
+            colorMap[y * mapWidth + x] = Color.blue;
+        }
+        else if (currentHeight < 0.42f)
+        {
+            colorMap[y * mapWidth + x] = new Color(0.9f, 0.85f, 0.6f);
+        }
+        else if (currentHeight < 0.70f)
+        {
+            colorMap[y * mapWidth + x] = Color.green;
+        }
+        else
+        {
+            colorMap[y * mapWidth + x] = Color.gray;
+        }
+    }
+}</code></pre>
+        </div>
+
+        <h3>What This Code Does</h3>
+
+        <p>
+            The code loops over every position in the map and checks the height value at that position.
+            Based on the value, a terrain category is chosen.
+        </p>
+
+        <p>
+            This means the map is no longer only showing intensity, but is now divided into readable terrain regions.
+            Low areas become water, medium areas become land, and high areas become mountains.
+        </p>
+
+        <p>
+            The thresholds can be adjusted to completely change the result.
+            A lower water threshold creates less ocean, while a higher one creates more.
+            Because of this, thresholds are a simple but powerful way to shape the world.
+        </p>
+
+        <h3>Interactive Demo</h3>
+
+        <p>
+            Below is a demo showing how one noise map can be divided into terrain categories using thresholds.
+            The grayscale values are no longer shown directly.
+            Instead, each range of values is given its own terrain color.
+        </p>
+
+        <details class="demo-wrapper" open>
+            <summary class="demo-summary">Show demo</summary>
+
+            <div class="demo-content">
+                <div class="demo-layout">
+                    <div class="controls">
+
+                        <label>Noise Scale: <span id="scale3Value">80</span></label>
+                        <input id="noiseScale3" type="range" min="5" max="200" value="80">
+
+                        <label>Octaves: <span id="octaves3Value">4</span></label>
+                        <input id="octaves3" type="range" min="1" max="8" value="4">
+
+                        <label>Persistence: <span id="persistence3Value">0.50</span></label>
+                        <input id="persistence3" type="range" min="0.1" max="1" step="0.05" value="0.5">
+
+                        <label>Lacunarity: <span id="lacunarity3Value">2.00</span></label>
+                        <input id="lacunarity3" type="range" min="1" max="4" step="0.1" value="2">
+
+                        <label>Water Threshold: <span id="waterThresholdValue">0.35</span></label>
+                        <input id="waterThreshold" type="range" min="0.05" max="0.60" step="0.01" value="0.35">
+
+                        <label>Beach Threshold: <span id="beachThresholdValue">0.42</span></label>
+                        <input id="beachThreshold" type="range" min="0.10" max="0.70" step="0.01" value="0.42">
+
+                        <label>Mountain Threshold: <span id="mountainThresholdValue">0.70</span></label>
+                        <input id="mountainThreshold" type="range" min="0.40" max="0.95" step="0.01" value="0.70">
+
+                        <button id="generateNoiseButton3">Generate Map</button>
+
+                    </div>
+
+                    <div class="preview">
+                        <canvas id="noiseCanvas3" width="400" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <h3>Why This Is Useful</h3>
+
+        <p>
+            A grayscale noise map is useful for understanding the structure of the data,
+            but it is still quite abstract.
+            By assigning terrain categories to different value ranges, the same data becomes much easier to interpret.
+        </p>
+
+        <p>
+            This is useful because one noise map can already form the basis of a simple world.
+            Even without extra systems like temperature or moisture,
+            it becomes possible to separate water, coast, land, and mountain areas.
+        </p>
+
+        <p>
+            In the next step, this idea can be expanded further by combining multiple maps,
+            such as height and temperature, to create more detailed biome systems.
+        </p>
+
     </div>
 </details>

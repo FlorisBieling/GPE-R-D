@@ -1,0 +1,203 @@
+<details class="step-wrapper" open>
+    <summary class="step-summary">Step 4: Biomes Using Multiple Map Layers</summary>
+
+    <div class="step-card">
+
+        <p>
+            In the previous step, one noise map was used to divide the world into simple terrain shapes.
+            This already made the map easier to understand, but it still had a limitation:
+            every area was based on height alone.
+        </p>
+
+        <p>
+            In reality, biomes are usually not only determined by height.
+            A mountain can be snowy or rocky, land can be grassy or dry, and low areas can be cold or warm.
+            To make the world more varied, multiple map layers can be combined.
+        </p>
+
+        <h3>Why One Map Is Not Enough</h3>
+
+        <p>
+            A single height map can show where the world is low or high,
+            but it cannot explain what kind of environment that area should have.
+            Two areas with the same height can still look very different if one is cold and the other is warm.
+        </p>
+
+        <p>
+            That is why a second map can be added.
+            In this step, a temperature map is combined with the height map.
+            The height map still controls the structure of the world,
+            while the temperature map helps decide what biome should appear there.
+        </p>
+
+        <h3>How Multiple Maps Create Biomes</h3>
+
+        <p>
+            The height map and temperature map are both generated using noise.
+            They are created separately, and each one describes a different property of the world.
+        </p>
+
+        <p>
+            For example:
+        </p>
+
+        <p>
+            - low height + low temperature can become cold ocean<br>
+            - low height + high temperature can become warm ocean<br>
+            - medium height + low temperature can become tundra<br>
+            - medium height + high temperature can become desert<br>
+            - high height + low temperature can become snow<br>
+            - high height + medium temperature can become mountain
+        </p>
+
+        <p>
+            This means the final biome is no longer based on one value,
+            but on the combination of multiple values.
+        </p>
+
+        <h3>How This Works in Unity</h3>
+
+        <p>
+            In Unity, this can be done by reading both maps at the same position
+            and selecting a biome based on the combination of those values.
+        </p>
+
+        <div class="code-block">
+<pre><code>float currentHeight = heightMap[x, y];
+float currentTemperature = temperatureMap[x, y];
+
+if (currentHeight < 0.35f)
+{
+    if (currentTemperature < 0.4f)
+    {
+        colorMap[index] = coldOceanColor;
+    }
+    else
+    {
+        colorMap[index] = warmOceanColor;
+    }
+}
+else if (currentHeight < 0.7f)
+{
+    if (currentTemperature < 0.3f)
+    {
+        colorMap[index] = tundraColor;
+    }
+    else if (currentTemperature < 0.65f)
+    {
+        colorMap[index] = grassColor;
+    }
+    else
+    {
+        colorMap[index] = desertColor;
+    }
+}
+else
+{
+    if (currentTemperature < 0.45f)
+    {
+        colorMap[index] = snowColor;
+    }
+    else
+    {
+        colorMap[index] = mountainColor;
+    }
+}</code></pre>
+        </div>
+
+        <h3>What This Code Does</h3>
+
+        <p>
+            The code checks both the height and temperature at the same position.
+            Height is used first to decide the broad terrain type,
+            and temperature is then used to decide which biome fits within that terrain.
+        </p>
+
+        <p>
+            This makes the world more believable.
+            Instead of every medium-height area looking the same,
+            the same height can now become grassland, tundra, or desert depending on temperature.
+        </p>
+
+        <h3>Interactive Demo</h3>
+
+        <p>
+            Below, the first preview shows the height map, the second preview shows the temperature map,
+            and the third preview shows the final biome map created by combining both.
+        </p>
+
+        <details class="demo-wrapper" open>
+            <summary class="demo-summary">Show demo</summary>
+
+            <div class="demo-content">
+                <div class="demo-layout">
+                    <div class="controls">
+
+                        <label>Height Scale: <span id="heightScale4Value">80</span></label>
+                        <input id="heightScale4" type="range" min="5" max="200" value="80">
+
+                        <label>Height Octaves: <span id="heightOctaves4Value">4</span></label>
+                        <input id="heightOctaves4" type="range" min="1" max="8" value="4">
+
+                        <label>Height Persistence: <span id="heightPersistence4Value">0.50</span></label>
+                        <input id="heightPersistence4" type="range" min="0.1" max="1" step="0.05" value="0.5">
+
+                        <label>Height Lacunarity: <span id="heightLacunarity4Value">2.00</span></label>
+                        <input id="heightLacunarity4" type="range" min="1" max="4" step="0.1" value="2">
+
+                        <label>Temperature Scale: <span id="temperatureScale4Value">120</span></label>
+                        <input id="temperatureScale4" type="range" min="5" max="200" value="120">
+
+                        <label>Temperature Octaves: <span id="temperatureOctaves4Value">3</span></label>
+                        <input id="temperatureOctaves4" type="range" min="1" max="8" value="3">
+
+                        <label>Temperature Persistence: <span id="temperaturePersistence4Value">0.50</span></label>
+                        <input id="temperaturePersistence4" type="range" min="0.1" max="1" step="0.05" value="0.5">
+
+                        <label>Temperature Lacunarity: <span id="temperatureLacunarity4Value">2.00</span></label>
+                        <input id="temperatureLacunarity4" type="range" min="1" max="4" step="0.1" value="2">
+
+                        <button id="generateNoiseButton4">Generate Maps</button>
+
+                    </div>
+
+                    <div class="preview-group">
+                        <div class="preview-block">
+                            <h4>Height Map</h4>
+                            <canvas id="heightCanvas4" width="300" height="300"></canvas>
+                        </div>
+
+                        <div class="preview-block">
+                            <h4>Temperature Map</h4>
+                            <canvas id="temperatureCanvas4" width="300" height="300"></canvas>
+                        </div>
+
+                        <div class="preview-block">
+                            <h4>Biome Map</h4>
+                            <canvas id="biomeCanvas4" width="300" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <h3>Why This Is Useful</h3>
+
+        <p>
+            Combining multiple maps makes the world much more flexible.
+            Height still gives the overall structure, but the second map allows variation within that structure.
+        </p>
+
+        <p>
+            This creates more interesting and believable results,
+            because areas are no longer defined by just one property.
+            The same terrain height can now lead to different biomes depending on temperature.
+        </p>
+
+        <p>
+            In the next step, these maps can be used as the basis for actual world generation in Unity,
+            where the data is no longer only visualized but also applied to terrain, tiles, or objects.
+        </p>
+
+    </div>
+</details>
