@@ -21,6 +21,7 @@ async function loadStep(targetId, filePath) {
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
+    await loadStep("intro", "steps/intro.html");
     await loadStep("step1", "steps/step1.html");
     await loadStep("step2", "steps/step2.html");
     await loadStep("step3", "steps/step3.html");

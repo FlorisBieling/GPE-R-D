@@ -1,182 +1,188 @@
 <details class="step-wrapper" open>
-    <summary class="step-summary">Step 7: Performance Techniques</summary>
+  <summary class="step-summary">Step 7: Performance Techniques</summary>
 
-    <div class="step-card">
-        <p>
-            In the previous step, the performance limitations of procedural generation were introduced.
-            Generating terrain, biome data, and decorations can quickly become expensive,
-            especially when this needs to happen continuously while the player is moving.
-        </p>
+  <div class="step-card">
+    <!-- INTRO -->
+    <h3>Intro</h3>
 
-        <p>
-            To make the system usable in practice, different techniques can be applied.
-            These techniques do not rely on a single solution,
-            but instead reduce the total workload from multiple angles.
-        </p>
+    <p>
+      In the previous step, the performance limitations of procedural generation
+      were introduced. Generating terrain, biome data, and decorations can
+      quickly become expensive, especially when this needs to happen
+      continuously while the player is moving.
+    </p>
 
-        <h3>1. Reducing Data and Work per Calculation</h3>
+    <p>
+      To make the system usable in practice, different techniques can be
+      applied. These techniques do not rely on a single solution, but instead
+      reduce the total workload from multiple angles.
+    </p>
 
-        <p>
-            One of the simplest ways to improve performance is to reduce the amount of work that needs to be done.
-            This can be achieved by using smaller data representations or by avoiding unnecessary calculations.
-        </p>
+    <h3>1. Reducing Data and Work per Calculation</h3>
 
-        <p>
-            For example:
-        </p>
+    <p>
+      One of the simplest ways to improve performance is to reduce the amount of
+      work that needs to be done. This can be achieved by using smaller data
+      representations or by avoiding unnecessary calculations.
+    </p>
 
-        <p>
-            - using lower resolutions for distant terrain<br>
-            - reducing the number of octaves for less important data<br>
-            - skipping calculations for tiles that will not be visible or used<br>
-        </p>
+    <p>For example:</p>
 
-        <p>
-            By limiting how much data is processed, the total number of operations can be reduced significantly.
-        </p>
+    <p>
+      - using lower resolutions for distant terrain<br />
+      - reducing the number of octaves for less important data<br />
+      - skipping calculations for tiles that will not be visible or used<br />
+    </p>
 
-        <h3>2. Chunk-Based Generation</h3>
+    <p>
+      By limiting how much data is processed, the total number of operations can
+      be reduced significantly.
+    </p>
 
-        <p>
-            Instead of generating the entire world at once,
-            the terrain can be divided into smaller sections called chunks.
-        </p>
+    <h3>2. Chunk-Based Generation</h3>
 
-        <p>
-            Each chunk is generated independently,
-            and only the chunks near the player are active at any given time.
-        </p>
+    <p>
+      Instead of generating the entire world at once, the terrain can be divided
+      into smaller sections called chunks.
+    </p>
 
-        <div class="code-block">
-<pre><code>terrainChunkDictionary.Add(
+    <p>
+      Each chunk is generated independently, and only the chunks near the player
+      are active at any given time.
+    </p>
+
+    <div class="code-block">
+      <pre><code>terrainChunkDictionary.Add(
     viewedChunkCoord,
     new TerrainChunk(viewedChunkCoord, chunkSize, detailLevels, transform, mapMaterial)
 );</code></pre>
-        </div>
+    </div>
 
-        <p>
-            This approach ensures that the system only generates what is needed,
-            instead of wasting time on parts of the world that are not visible.
-        </p>
+    <p>
+      This approach ensures that the system only generates what is needed,
+      instead of wasting time on parts of the world that are not visible.
+    </p>
 
-        <h3>3. Level of Detail and Distance-Based Updates</h3>
+    <h3>3. Level of Detail and Distance-Based Updates</h3>
 
-        <p>
-            Not all parts of the world need the same level of detail.
-            Chunks that are close to the player require high detail,
-            while distant chunks can use simplified versions.
-        </p>
+    <p>
+      Not all parts of the world need the same level of detail. Chunks that are
+      close to the player require high detail, while distant chunks can use
+      simplified versions.
+    </p>
 
-        <p>
-            In the project, different levels of detail (LOD) are used,
-            where the mesh complexity changes based on the distance to the viewer.
-        </p>
+    <p>
+      In the project, different levels of detail (LOD) are used, where the mesh
+      complexity changes based on the distance to the viewer.
+    </p>
 
-        <div class="code-block">
-<pre><code>if (viewerDstFromNearestEdge > detailLevels[i].visibleDistanceThreshold)
+    <div class="code-block">
+      <pre><code>if (viewerDstFromNearestEdge > detailLevels[i].visibleDistanceThreshold)
 {
     lodIndex = i + 1;
 }</code></pre>
-        </div>
+    </div>
 
-        <p>
-            This reduces the number of vertices and triangles that need to be processed,
-            especially for distant terrain.
-        </p>
+    <p>
+      This reduces the number of vertices and triangles that need to be
+      processed, especially for distant terrain.
+    </p>
 
-        <p>
-            Additionally, updates are only triggered when the viewer moves a certain distance,
-            instead of recalculating everything every frame.
-        </p>
+    <p>
+      Additionally, updates are only triggered when the viewer moves a certain
+      distance, instead of recalculating everything every frame.
+    </p>
 
-        <h3>4. Separating Calculation from Rendering</h3>
+    <h3>4. Separating Calculation from Rendering</h3>
 
-        <p>
-            Another important optimization is separating data generation from Unity-specific operations.
-            Calculations such as noise generation or biome selection do not require access to Unity objects.
-        </p>
+    <p>
+      Another important optimization is separating data generation from
+      Unity-specific operations. Calculations such as noise generation or biome
+      selection do not require access to Unity objects.
+    </p>
 
-        <p>
-            This means these calculations can be handled independently,
-            while mesh creation and object instantiation remain limited to the main thread.
-        </p>
+    <p>
+      This means these calculations can be handled independently, while mesh
+      creation and object instantiation remain limited to the main thread.
+    </p>
 
-        <p>
-            By structuring the system this way,
-            expensive calculations can be performed without blocking rendering directly.
-        </p>
+    <p>
+      By structuring the system this way, expensive calculations can be
+      performed without blocking rendering directly.
+    </p>
 
-        <h3>5. Smarter Object Placement</h3>
+    <h3>5. Smarter Object Placement</h3>
 
-        <p>
-            Decoration placement can be one of the most expensive parts of procedural generation.
-            Instead of placing objects everywhere,
-            rules can be applied to reduce unnecessary work.
-        </p>
+    <p>
+      Decoration placement can be one of the most expensive parts of procedural
+      generation. Instead of placing objects everywhere, rules can be applied to
+      reduce unnecessary work.
+    </p>
 
-        <p>
-            These rules include:
-        </p>
+    <p>These rules include:</p>
 
-        <p>
-            - sampling at intervals instead of every tile<br>
-            - applying spawn chances to reduce object count<br>
-            - using noise thresholds to control distribution<br>
-            - enforcing minimum distances between objects<br>
-        </p>
+    <p>
+      - sampling at intervals instead of every tile<br />
+      - applying spawn chances to reduce object count<br />
+      - using noise thresholds to control distribution<br />
+      - enforcing minimum distances between objects<br />
+    </p>
 
-        <div class="code-block">
-<pre><code>if (x % sampleInterval != 0 || y % sampleInterval != 0)
+    <div class="code-block">
+      <pre><code>if (x % sampleInterval != 0 || y % sampleInterval != 0)
 {
     continue;
 }</code></pre>
-        </div>
+    </div>
 
-        <p>
-            These techniques ensure that objects are distributed in a controlled way,
-            while also reducing the total number of checks and instantiations.
-        </p>
+    <p>
+      These techniques ensure that objects are distributed in a controlled way,
+      while also reducing the total number of checks and instantiations.
+    </p>
 
-        <h3>6. Incremental Processing</h3>
+    <h3>6. Incremental Processing</h3>
 
-        <p>
-            Instead of doing all work at once,
-            some systems can spread their workload over multiple frames.
-        </p>
+    <p>
+      Instead of doing all work at once, some systems can spread their workload
+      over multiple frames.
+    </p>
 
-        <p>
-            In the project, decoration objects are instantiated in small batches per frame.
-            This prevents large spikes in workload and keeps the frame rate stable.
-        </p>
+    <p>
+      In the project, decoration objects are instantiated in small batches per
+      frame. This prevents large spikes in workload and keeps the frame rate
+      stable.
+    </p>
 
-        <div class="code-block">
-<pre><code>while (nextDecorationSpawnIndex < pendingDecorationData.Length && spawnedThisFrame < decorationsPerFrame)
+    <div class="code-block">
+      <pre><code>while (nextDecorationSpawnIndex < pendingDecorationData.Length && spawnedThisFrame < decorationsPerFrame)
 {
     // spawn objects gradually
 }</code></pre>
-        </div>
-
-        <p>
-            By limiting how much work is done each frame,
-            the system avoids sudden drops in performance.
-        </p>
-
-        <h3>Why These Techniques Work Together</h3>
-
-        <p>
-            Each of these techniques reduces performance cost in a different way.
-            Some reduce the amount of data, others limit when work is done,
-            and others control how detailed the result needs to be.
-        </p>
-
-        <p>
-            The important idea is that performance is not solved by a single change.
-            It requires combining multiple strategies that together keep the system responsive.
-        </p>
-
-        <p>
-            In the next step, one specific technique will be explored in more detail:
-            multithreading, and how it can be used to move heavy calculations away from the main thread.
-        </p>
     </div>
+
+    <p>
+      By limiting how much work is done each frame, the system avoids sudden
+      drops in performance.
+    </p>
+
+    <h3>Why These Techniques Work Together</h3>
+
+    <p>
+      Each of these techniques reduces performance cost in a different way. Some
+      reduce the amount of data, others limit when work is done, and others
+      control how detailed the result needs to be.
+    </p>
+
+    <p>
+      The important idea is that performance is not solved by a single change.
+      It requires combining multiple strategies that together keep the system
+      responsive.
+    </p>
+
+    <p>
+      In the next step, one specific technique will be explored in more detail:
+      multithreading, and how it can be used to move heavy calculations away
+      from the main thread.
+    </p>
+  </div>
 </details>

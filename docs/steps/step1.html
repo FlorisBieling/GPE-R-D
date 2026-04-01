@@ -1,52 +1,53 @@
 <details class="step-wrapper" open>
-    <summary class="step-summary">Step 1: Perlin Noise</summary>
+  <summary class="step-summary">Step 1: Perlin Noise</summary>
 
-    <div class="step-card">
+  <div class="step-card">
+    <!-- INTRO -->
+    <h3>Intro</h3>
 
-        <!-- INTRO -->
-        <p>
-            The first step in this project is generating a noise map using Perlin noise.
-            Instead of assigning completely random values, Perlin noise creates smooth transitions between values.
-            This makes it useful for things like terrain generation, where abrupt changes would look unnatural.
-        </p>
+    <p>
+      The starting point of this project is generating a noise map using Perlin
+      noise. Instead of assigning completely random values, Perlin noise creates
+      smooth transitions between values. This makes it useful for things like
+      terrain generation, where abrupt changes would look unnatural.
+    </p>
 
-        <p>
-            In this project, each position on the map gets a value that represents height.
-            These values are later used to create terrains and biomes, and could be used for other world features in the future.
-        </p>
+    <p>
+      In this project, each position on the map gets a value that represents
+      height. These values are later used to create terrains and biomes, and
+      could be used for other world features in the future.
+    </p>
 
-        <!-- HOW IT WORKS -->
-        <h3>How Perlin Noise Works</h3>
+    <!-- HOW IT WORKS -->
+    <h3>How Perlin Noise Works</h3>
 
-        <p>
-            Perlin noise works by dividing space into a grid. Each grid point influences the surrounding area.
-            Instead of random values, nearby positions produce similar results, which creates smooth patterns.
-        </p>
+    <p>
+      Perlin noise works by dividing space into a grid. Each grid point
+      influences the surrounding area. Instead of random values, nearby
+      positions produce similar results, which creates smooth patterns.
+    </p>
 
-        <p>
-            For every position:
-        </p>
+    <p>For every position:</p>
 
-        <p>
-            1. The surrounding grid points are determined<br>
-            2. A value is calculated based on distance and direction<br>
-            3. The results are blended together smoothly
-        </p>
+    <p>
+      1. The surrounding grid points are determined<br />
+      2. A value is calculated based on distance and direction<br />
+      3. The results are blended together smoothly
+    </p>
 
-        <p>
-            This results in a continuous surface instead of random noise.
-        </p>
+    <p>This results in a continuous surface instead of random noise.</p>
 
-        <!-- UNITY CODE -->
-        <h3>Noise Generation in Unity</h3>
+    <!-- UNITY CODE -->
+    <h3>Noise Generation in Unity</h3>
 
-        <p>
-            Below is the actual implementation used in Unity to generate the noise map.
-            It loops over every position and calculates a height value using multiple layers (octaves) of Perlin noise.
-        </p>
+    <p>
+      Below is the actual implementation used in Unity to generate the noise
+      map. It loops over every position and calculates a height value using
+      multiple layers (octaves) of Perlin noise.
+    </p>
 
-        <div class="code-block">
-<pre><code>public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, int seed, float scale, int octaves, float persistance, float lacunarity, Vector2 offset)
+    <div class="code-block">
+      <pre><code>public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, int seed, float scale, int octaves, float persistance, float lacunarity, Vector2 offset)
 {
     float[,] noiseMap = new float[mapWidth, mapHeight];
 
@@ -99,96 +100,92 @@
 
     return noiseMap;
 }</code></pre>
-        </div>
-
-        <!-- CODE EXPLANATION -->
-        <h3>What This Code Does</h3>
-        
-        <p>
-            Now this is a lot code code. For now, let's focus on the basics of how the noise map is generated.
-        </p>
-
-        <p>
-            The code loops over every position in the map and calculates a noise value.
-            Each position is converted into noise coordinates using the scale value.
-        </p>
-
-        <p>
-            The important part is:
-        </p>
-
-        <div class="code-block">
-<pre><code>float sampleX = (x - halfWidth) / scale;
-float sampleY = (y - halfHeight) / scale;</code></pre>
-        </div>
-
-        <p>
-            The scale determines how detailed the noise is:
-        </p>
-
-        <p>
-            - Small scale = more detail<br>
-            - Large scale = smoother terrain
-        </p>
-
-        <p>
-            There are a lot of other things going on in the code, such as octaves,
-            persistence, and lacunarity, which add more layers of noise to create more complex terrain.
-            This will be explained further in the next step.
-        </p>
-
-        <!-- DEMO -->
-        <h3>Interactive Demo</h3>
-
-        <p>
-            For now, we can take a look at a simple demo to see how changing the scale and
-            seed affects the noise map. Changing the scale will make the terrain more or 
-            less detailed, while changing the seed will produce a completely different map.
-        </p>
-
-        <details class="demo-wrapper" open>
-            <summary class="demo-summary">Show demo</summary>
-
-            <div class="demo-content">
-                <div class="demo-layout">
-                    <div class="controls">
-
-                        <label>Noise Scale: <span id="scaleValue">40</span></label>
-                        <input id="noiseScale" type="range" min="5" max="200" value="40">
-
-                        <label>Seed: <span id="seedValue">0</span></label>
-                        <input id="noiseSeed" type="range" min="0" max="100" value="0">
-
-                        <button id="generateNoiseButton">Generate Map</button>
-
-                    </div>
-
-                    <div class="preview">
-                        <canvas id="noiseCanvas" width="200" height="200"></canvas>
-                    </div>
-                </div>
-            </div>
-        </details>
-
-        <!-- USE CASE -->
-        <h3>Why This Is Useful</h3>
-
-        <p>
-            Perlin noise creates structured randomness, which makes it ideal for procedural generation.
-            It is commonly used for:
-        </p>
-
-        <p>
-            - Terrain height maps<br>
-            - Biome generation<br>
-            - Clouds and fog<br>
-            - Procedural textures
-        </p>
-
-        <p>
-            In the next step, we will take the noise map generated in this step and look at the other parameters
-            that can be used to create more interesting and varied terrain, like octaves, persistence, and lacunarity.
-        </p>
-
     </div>
+
+    <!-- CODE EXPLANATION -->
+    <h3>What This Code Does</h3>
+
+    <p>
+      Now this is a lot code code. For now, let's focus on the basics of how the
+      noise map is generated.
+    </p>
+
+    <p>
+      The code loops over every position in the map and calculates a noise
+      value. Each position is converted into noise coordinates using the scale
+      value.
+    </p>
+
+    <p>The important part is:</p>
+
+    <div class="code-block">
+      <pre><code>float sampleX = (x - halfWidth) / scale;
+float sampleY = (y - halfHeight) / scale;</code></pre>
+    </div>
+
+    <p>The scale determines how detailed the noise is:</p>
+
+    <p>
+      - Small scale = more detail<br />
+      - Large scale = smoother terrain
+    </p>
+
+    <p>
+      There are a lot of other things going on in the code, such as octaves,
+      persistence, and lacunarity, which add more layers of noise to create more
+      complex terrain. This will be explained further in the next step.
+    </p>
+
+    <!-- DEMO -->
+    <h3>Interactive Demo</h3>
+
+    <p>
+      For now, we can take a look at a simple demo to see how changing the scale
+      and seed affects the noise map. Changing the scale will make the terrain
+      more or less detailed, while changing the seed will produce a completely
+      different map.
+    </p>
+
+    <details class="demo-wrapper" open>
+      <summary class="demo-summary">Show demo</summary>
+
+      <div class="demo-content">
+        <div class="demo-layout">
+          <div class="controls">
+            <label>Noise Scale: <span id="scaleValue">40</span></label>
+            <input id="noiseScale" type="range" min="5" max="200" value="40" />
+
+            <label>Seed: <span id="seedValue">0</span></label>
+            <input id="noiseSeed" type="range" min="0" max="100" value="0" />
+
+            <button id="generateNoiseButton">Generate Map</button>
+          </div>
+
+          <div class="preview">
+            <canvas id="noiseCanvas" width="200" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- USE CASE -->
+    <h3>Why This Is Useful</h3>
+
+    <p>
+      Perlin noise creates structured randomness, which makes it ideal for
+      procedural generation. It is commonly used for:
+    </p>
+
+    <p>
+      - Terrain height maps<br />
+      - Biome generation<br />
+      - Clouds and fog<br />
+      - Procedural textures
+    </p>
+
+    <p>
+      To make this more useful, additional parameters can be introduced to
+      increase complexity.
+    </p>
+  </div>
 </details>

@@ -6,21 +6,15 @@
     <h3>Intro</h3>
 
     <p>
-      In the previous step, the noise map was generated using only the scale
-      value. While this created a basic terrain shape, the result was still
-      quite simple and lacked detail.
+      A single layer of noise already creates a structured pattern, but on its
+      own it is still quite limited. The result lacks variation and does not
+      resemble the complexity found in real terrain.
     </p>
 
     <p>
-      To make the terrain more interesting, additional parameters can be used.
-      These parameters allow multiple layers of noise to be combined into a
-      single result, creating both large shapes and smaller details.
-    </p>
-
-    <p>
-      The main parameters that make the noise more complex are octaves,
-      persistence, and lacunarity. These allow multiple layers of noise to be
-      combined into one final result.
+      To increase this complexity, multiple layers of noise can be combined.
+      This allows both large-scale shapes and smaller details to exist within
+      the same map.
     </p>
 
     <h3>What These Parameters Do</h3>
@@ -198,9 +192,10 @@ for (int i = 0; i < octaves; i++)
     <h3>Why This Is Useful</h3>
 
     <p>
-      Using only one layer of noise often creates terrain that looks too simple and unrealistic.
-      By combining multiple layers, it becomes possible to create terrain that
-      has both large overall shapes and smaller local variation.
+      Using only one layer of noise often creates terrain that looks too simple
+      and unrealistic. By combining multiple layers, it becomes possible to
+      create terrain that has both large overall shapes and smaller local
+      variation.
     </p>
 
     <p>
