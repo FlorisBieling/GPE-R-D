@@ -30,6 +30,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     await loadStep("step6", "steps/step6.html");
     await loadStep("step7", "steps/step7.html");
     await loadStep("step8", "steps/step8.html");
+    await loadStep("implementation", "steps/implementation.html");
+    await loadStep("conclusion", "steps/conclusion.html");
 
     window.dispatchEvent(new Event("stepsLoaded"));
 });

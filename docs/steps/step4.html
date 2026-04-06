@@ -4,47 +4,96 @@
   </summary>
 
   <div class="step-card">
-    <!-- INTRO -->
-    <h3>Intro</h3>
+    <h3>Goal of This Step</h3>
 
     <p>
-      Defining terrain purely based on height already creates a readable world,
-      but it also introduces a limitation: areas with the same height will
-      always look the same.
+      In the previous step, Perlin noise values were interpreted as terrain
+      using height thresholds. This already made it possible to distinguish
+      between water, land, and mountains. However, this approach still had a
+      limitation: areas with the same height always resulted in the same type of
+      terrain.
     </p>
 
     <p>
-      To add variation, an additional data layer can be introduced. In this
-      project, a temperature map is used alongside the height map.
+      This step continues answering <strong>sub question 2</strong> by extending
+      the system from terrain classification to a more complete biome system.
+      Instead of using only height, an additional data layer is introduced:
+      temperature.
+    </p>
+
+    <h3>Why Height Alone Was Not Enough</h3>
+
+    <p>
+      When using only height, the system can only describe vertical structure.
+      This means that all areas at a similar height look the same, regardless of
+      any other environmental factors. For example, all mid-height areas become
+      the same type of land, and all high areas become the same type of
+      mountain.
     </p>
 
     <p>
-      In the Unity project, this is solved by generating not only a height map,
-      but also a temperature map. These two maps are then combined to decide
-      which biome should appear at each position.
+      In reality, terrain is influenced by more than just height. Two areas at
+      the same elevation can look completely different depending on climate
+      conditions such as temperature or moisture. Because of this, a second data
+      layer is needed to introduce variation.
     </p>
 
-    <h3>How This Works in the Project</h3>
+    <h3>Why Temperature Was Chosen</h3>
 
     <p>
-      The height map determines the overall structure of the world. The
-      temperature map adds another layer of information. This means that two
-      areas with the same height can still become different biomes if their
-      temperature is different.
+      Temperature was chosen as the second map because it is intuitive and works
+      well together with height. While height determines the shape of the world,
+      temperature determines what kind of environment fits that location.
     </p>
 
     <p>
-      For example, high terrain can become a cold snowy biome or a warmer rocky
-      biome, while medium-height land can become greener or drier depending on
-      the temperature.
+      This allows the system to differentiate between areas that would otherwise
+      be identical. For example, a high area can become a cold snowy biome or a
+      warmer rocky biome, while mid-height terrain can become either lush or
+      dry depending on the temperature value.
+    </p>
+
+    <p>
+      Other options, such as moisture, could also be used. However, temperature
+      was chosen as the first extension because it is simple to implement and
+      already introduces a significant increase in variation.
+    </p>
+
+    <h3>How the Temperature Map Works</h3>
+
+    <p>
+      The temperature map is generated in the same way as the height map, using
+      Perlin noise. The main difference is that it uses a different seed and a
+      larger scale. This results in broader and more gradual variation across
+      the map.
+    </p>
+
+    <p>
+      Using a larger scale ensures that temperature changes more slowly across
+      the world than height. This reflects how climate behaves in reality:
+      temperature zones tend to span larger regions than terrain features.
+    </p>
+
+    <h3>How Height and Temperature Are Combined</h3>
+
+    <p>
+      Once both maps are generated, the system reads both values at the same
+      position and uses them together to determine the final biome. Instead of
+      checking only height thresholds, the system now checks combinations of
+      height and temperature ranges.
+    </p>
+
+    <p>
+      This creates a two-dimensional classification system, where one axis
+      represents height and the other represents temperature. Each combination
+      corresponds to a different biome.
     </p>
 
     <h3>How This Works in Unity</h3>
 
     <p>
-      In the project, both maps are generated separately. The temperature map
-      uses the same noise system as the height map, but with a different seed
-      and a much larger scale.
+      In Unity, both maps are generated separately using the same noise
+      function. The temperature map uses a different seed and a larger scale.
     </p>
 
     <div class="code-block">
@@ -74,36 +123,44 @@ float[,] temperatureMap = Noise.GenerateNoiseMap(
     </div>
 
     <p>
-      After that, both values are read at the same position and passed into the
-      biome system.
+      After generating both maps, the values are combined when assigning the
+      final color or biome type.
     </p>
 
     <div class="code-block">
       <pre><code>float currentHeight = heightMap[x, y];
 float currentTemperature = temperatureMap[x, y];
-colorMap[y * mapChunkSize + x] = GetColor(currentHeight, currentTemperature);</code></pre>
+
+colorMap[y * mapChunkSize + x] =
+    GetColor(currentHeight, currentTemperature);</code></pre>
     </div>
 
-    <h3>What This Means</h3>
+    <h3>What This Code Does</h3>
 
     <p>
-      Height and temperature each describe a different property of the world.
-      Height controls where terrain is low or high, while temperature changes
-      what kind of biome fits that area.
+      For each position in the map, the system retrieves both the height and
+      temperature values. These values are then passed into a function that
+      determines which biome should be assigned.
     </p>
 
     <p>
-      This makes the world more varied and believable, because the final biome
-      is no longer based on just one value.
+      This means that the same height value can now result in different biomes,
+      depending on the temperature. Instead of one-dimensional terrain
+      classification, the system now supports more complex and varied results.
+    </p>
+
+    <p>
+      This directly contributes to sub question 2, because it shows how multiple
+      Perlin noise maps can be combined to create a structured biome system
+      instead of only a simple terrain map.
     </p>
 
     <h3>Interactive Demo</h3>
 
     <p>
-      In the comparison view below, the left image shows the height map on one
-      side and the temperature map on the other side, based on the slider
-      position. The result image shows terrain based only on height on one side,
-      and the final biome result with temperature added on the other side.
+      The demo below shows how height and temperature maps influence the final
+      result. The slider allows comparison between the raw maps and the final
+      biome output.
     </p>
 
     <details class="demo-wrapper" open>
@@ -130,6 +187,7 @@ colorMap[y * mapChunkSize + x] = GetColor(currentHeight, currentTemperature);</c
 
           <div class="step4-preview-column">
             <h4>Height Only vs Height + Temperature</h4>
+
             <canvas id="biomeCanvas4" width="420" height="420"></canvas>
 
             <button id="generateStep4Button" class="generate-button">
@@ -140,24 +198,25 @@ colorMap[y * mapChunkSize + x] = GetColor(currentHeight, currentTemperature);</c
       </div>
     </details>
 
-    <h3>Why This Is Useful</h3>
+    <h3>What This Step Adds to the System</h3>
 
     <p>
-      A single map can create the basic structure of a world, but combining
-      multiple maps makes it possible to create more interesting regions. Height
-      gives the world its shape, while temperature adds variation within that
-      shape.
+      This step transforms the project from a simple terrain classification
+      system into a more complete biome system. By combining multiple data
+      layers, the world becomes more varied and believable without changing the
+      core generation method.
     </p>
 
     <p>
-      This is an important step, because it moves the project away from simple
-      terrain categories and towards a real biome system.
+      It also demonstrates an important concept in procedural generation:
+      complex results do not necessarily require completely new algorithms, but
+      can often be achieved by combining multiple simple systems.
     </p>
 
     <p>
-      In the next step, this data can be used as the basis for actual world
-      generation in Unity, where the generated maps are no longer only
-      visualized, but also used to build the terrain itself.
+      In the next step, this data is no longer only visualized in 2D. Instead,
+      it is used to generate an actual 3D world in Unity, where the same data
+      drives terrain meshes, textures, and object placement.
     </p>
   </div>
 </details>

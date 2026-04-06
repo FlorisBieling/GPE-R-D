@@ -1,51 +1,49 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Project Development</title>
-    <link rel="stylesheet" href="styles/main.css">
-</head>
-<body>
+    <link rel="stylesheet" href="styles/main.css" />
+  </head>
+  <body>
     <header class="site-header">
-        <h1>Procedural World Development</h1>
-        <p>Step-by-step interactive breakdown of the project</p>
+      <h1>Procedural World Development</h1>
+      <p>Author: <strong>Floris Bieling</strong></p>
+      <p>Date: <strong>06-04-2026</strong></p>
     </header>
 
     <main class="container">
-        <section class="intro-card">
-            <h2>About this project</h2>
-            <p>
-                This page shows the development of my procedural world project.
-                Each step contains a small interactive example so the user can
-                change values and directly see what happens.
-            </p>
-        </section>
 
-        <section class="step-navigation">
-            <h2>Steps</h2>
-            <nav class="step-links">
-                <a href="#intro">Introduction</a>
-                <a href="#step1">Step 1: Perlin Noise</a>
-                <a href="#step2">Step 2: More Noise Parameters</a>
-                <a href="#step3">Step 3: From Noise to Terrain Shapes</a>
-                <a href="#step4">Step 4: Combining Height and Temperature</a>
-                <a href="#step5">Step 5: From 2D Data to Unity World Generation</a>
-                <a href="#step6">Step 6: Performance Problems</a>
-                <a href="#step7">Step 7: Performance Techniques</a>
-                <a href="#step8">Step 8: Multithreading in Unity</a>
-            </nav>
-        </section>
+      <section id="intro" class="step-container"></section>
 
-        <section id="intro" class="step-container"></section>
-        <section id="step1" class="step-container"></section>
-        <section id="step2" class="step-container"></section>
-        <section id="step3" class="step-container"></section>
-        <section id="step4" class="step-container"></section>
-        <section id="step5" class="step-container"></section>
-        <section id="step6" class="step-container"></section>
-        <section id="step7" class="step-container"></section>
-        <section id="step8" class="step-container"></section>
+      <section class="step-navigation">
+        <h2>Steps</h2>
+        <nav class="step-links">
+          <a href="#intro">Introduction</a>
+          <a href="#step1">Step 1: Perlin Noise</a>
+          <a href="#step2">Step 2: More Noise Parameters</a>
+          <a href="#step3">Step 3: From Noise to Terrain Shapes</a>
+          <a href="#step4">Step 4: Combining Height and Temperature</a>
+          <a href="#step5">Step 5: From 2D Data to Unity World Generation</a>
+          <a href="#step6">Step 6: Performance Problems</a>
+          <a href="#step7">Step 7: Performance Techniques</a>
+          <a href="#step8">Step 8: Multithreading in Unity</a>
+          <a href="#implementation">How to implement in Unity</a>
+          <a href="#conclusion">Conclusion</a>
+        </nav>
+      </section>
+
+      <section id="step1" class="step-container"></section>
+      <section id="step2" class="step-container"></section>
+      <section id="step3" class="step-container"></section>
+      <section id="step4" class="step-container"></section>
+      <section id="step5" class="step-container"></section>
+      <section id="step6" class="step-container"></section>
+      <section id="step7" class="step-container"></section>
+      <section id="step8" class="step-container"></section>
+      <section id="implementation" class="step-container"></section>
+      <section id="conclusion" class="step-container"></section>
     </main>
 
     <script src="scripts/main.js"></script>
@@ -54,5 +52,5 @@
     <script src="scripts/steps/step2.js"></script>
     <script src="scripts/steps/step3.js"></script>
     <script src="scripts/steps/step4.js"></script>
-</body>
+  </body>
 </html>

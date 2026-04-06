@@ -2,56 +2,116 @@
   <summary class="step-summary">Step 3: From Noise to Terrain Shapes</summary>
 
   <div class="step-card">
-    <!-- INTRO -->
-    <h3>Intro</h3>
+    <h3>Goal of This Step</h3>
 
     <p>
-      Up to this point, the generated values have only been shown as grayscale.
-      While this is useful for understanding the structure, the data itself does
-      not yet represent anything meaningful.
+      The previous steps focused on generating structured noise and controlling
+      its appearance through parameters such as scale, octaves, persistence, and
+      lacunarity. At that point, the system could already produce useful data,
+      but that data was still abstract. It existed only as grayscale values.
     </p>
 
     <p>
-      By interpreting these values as height, the same data can now be used to
-      define terrain shapes.
+      This step mainly addresses <strong>sub question 2</strong>: how Perlin
+      noise can be used to generate a structured terrain or biome map. The first
+      part of that answer is learning how to interpret raw noise values as
+      terrain categories.
+    </p>
+
+    <h3>Why This Step Was Needed</h3>
+
+    <p>
+      A grayscale noise map is useful for understanding the internal structure
+      of the data, but it is not yet very meaningful as terrain. A player or
+      developer cannot immediately read black, gray, and white values as ocean,
+      land, or mountain unless those values are translated into terrain types.
     </p>
 
     <p>
-      This means that low values can represent water, slightly higher values can
-      represent beaches, and high values can represent mountains. Instead of
-      looking at the map as black and white pixels, it now becomes possible to
-      read it as a simple terrain layout.
+      That is why this step is necessary. Instead of treating the generated
+      values as abstract intensity, the system now starts interpreting them as
+      height. Once the values are seen as height, they can be divided into
+      ranges that represent different parts of the landscape.
+    </p>
+
+    <p>
+      This is an important shift in the project. The noise map is no longer only
+      a mathematical output, but the beginning of an actual terrain model.
+    </p>
+
+    <h3>Why Thresholds Were Chosen</h3>
+
+    <p>
+      The simplest and most controllable way to convert height values into
+      terrain categories is by using thresholds. A threshold is a boundary value
+      that determines when one terrain type changes into another.
+    </p>
+
+    <p>
+      This method was chosen because it is easy to understand, easy to tune, and
+      works well with procedurally generated data. By adjusting only a few
+      threshold values, the world can quickly become more ocean-heavy, more
+      mountainous, or more land-based.
+    </p>
+
+    <p>
+      Other approaches could be used, such as continuous biome blending or more
+      advanced classification systems, but thresholds are a strong first step
+      because they make the data much easier to interpret while keeping the
+      system simple.
     </p>
 
     <h3>How Height Thresholds Work</h3>
 
     <p>
-      A noise map is basically a grid of values between 0 and 1. On their own,
-      these values do not mean anything yet. A threshold is a chosen boundary
-      that decides how a value should be interpreted.
-    </p>
-
-    <p>For example:</p>
-
-    <p>
-      - values below 0.35 can be water<br />
-      - values between 0.35 and 0.42 can be beach<br />
-      - values between 0.42 and 0.70 can be grass<br />
-      - values above 0.70 can be mountain
+      The noise map contains values between 0 and 1 after normalization. On
+      their own, these values do not yet describe what type of terrain a
+      position should represent. A threshold-based system assigns meaning to
+      those values by splitting them into ranges.
     </p>
 
     <p>
-      This makes it possible to turn one noise map into different terrain types.
-      The map is still generated from the same noise system, but it becomes much
-      easier to understand visually.
+      For example, low values can represent water, medium values can represent
+      land, and high values can represent mountains. This means that one single
+      noise map can already be transformed into a readable terrain layout.
+    </p>
+
+    <p>
+      In this project, the thresholds are used like this:
+    </p>
+
+    <p>
+      - values below 0.35 represent water<br />
+      - values between 0.35 and 0.42 represent beach<br />
+      - values between 0.42 and 0.70 represent grass or land<br />
+      - values above 0.70 represent mountain
+    </p>
+
+    <p>
+      These exact values are not fixed rules. They are design choices that can
+      be adjusted depending on the type of world that is needed.
+    </p>
+
+    <h3>Why This Improves the System</h3>
+
+    <p>
+      Interpreting noise values as terrain makes the output much more useful.
+      Instead of only seeing a pattern, it becomes possible to understand the
+      generated world as a landscape with recognizable regions.
+    </p>
+
+    <p>
+      This also creates a much stronger base for later steps. Once height values
+      are translated into terrain categories, the same information can later be
+      reused for biome systems, mesh generation, and object placement.
     </p>
 
     <h3>How This Works in Unity</h3>
 
     <p>
-      In Unity, this is often done by checking the height value and assigning a
-      color or terrain type based on it. The following example shows the basic
-      idea.
+      In Unity, this is done by looping over every position in the generated map
+      and checking which height range the value belongs to. A color is then
+      assigned based on that range.
     </p>
 
     <div class="code-block">
@@ -84,29 +144,36 @@
     <h3>What This Code Does</h3>
 
     <p>
-      The code loops over every position in the map and checks the height value
-      at that position. Based on the value, a terrain category is chosen.
+      The code checks the height value at every coordinate and compares it to a
+      set of threshold values. Depending on which range the height falls into, a
+      different terrain color is assigned.
     </p>
 
     <p>
-      This means the map is no longer only showing intensity, but is now divided
-      into readable terrain regions. Low areas become water, medium areas become
-      land, and high areas become mountains.
+      This means the map is no longer displayed as raw grayscale data. Instead,
+      the generated values are translated into terrain regions that are much
+      easier to read and reason about.
     </p>
 
     <p>
-      The thresholds can be adjusted to completely change the result. A lower
-      water threshold creates less ocean, while a higher one creates more.
-      Because of this, thresholds are a simple but powerful way to shape the
-      world.
+      The thresholds also act as simple control points. Raising the water
+      threshold will increase the amount of ocean, while lowering it will expose
+      more land. In the same way, changing the mountain threshold changes how
+      much of the world is considered high terrain.
+    </p>
+
+    <p>
+      This directly contributes to sub question 2, because it shows one of the
+      first practical ways in which Perlin noise can be transformed from raw
+      mathematical data into a structured terrain map.
     </p>
 
     <h3>Interactive Demo</h3>
 
     <p>
-      Below is a demo showing how one noise map can be divided into terrain
-      categories using thresholds. The grayscale values are no longer shown
-      directly. Instead, each range of values is given its own terrain color.
+      The demo below shows how a noise map can be interpreted as terrain by
+      applying thresholds. Instead of only changing the structure of the noise,
+      this step changes the meaning of the generated values.
     </p>
 
     <details class="demo-wrapper" open>
@@ -141,10 +208,10 @@
               value="2"
             />
 
-            <label
-              >Water Threshold:
-              <span id="waterThresholdValue">0.35</span></label
-            >
+            <label>
+              Water Threshold:
+              <span id="waterThresholdValue">0.35</span>
+            </label>
             <input
               id="waterThreshold"
               type="range"
@@ -154,10 +221,10 @@
               value="0.35"
             />
 
-            <label
-              >Beach Threshold:
-              <span id="beachThresholdValue">0.42</span></label
-            >
+            <label>
+              Beach Threshold:
+              <span id="beachThresholdValue">0.42</span>
+            </label>
             <input
               id="beachThreshold"
               type="range"
@@ -167,10 +234,10 @@
               value="0.42"
             />
 
-            <label
-              >Mountain Threshold:
-              <span id="mountainThresholdValue">0.70</span></label
-            >
+            <label>
+              Mountain Threshold:
+              <span id="mountainThresholdValue">0.70</span>
+            </label>
             <input
               id="mountainThreshold"
               type="range"
@@ -190,24 +257,26 @@
       </div>
     </details>
 
-    <h3>Why This Is Useful</h3>
+    <h3>What This Step Adds to the System</h3>
 
     <p>
-      A grayscale noise map is useful for understanding the structure of the
-      data, but it is still quite abstract. By assigning terrain categories to
-      different value ranges, the same data becomes much easier to interpret.
+      This step transforms the project from procedural pattern generation into
+      procedural terrain interpretation. The generated noise is no longer only a
+      technical output, but becomes a readable landscape made up of water,
+      coast, land, and mountains.
     </p>
 
     <p>
-      This is useful because one noise map can already form the basis of a
-      simple world. Even without extra systems like temperature or moisture, it
-      becomes possible to separate water, coast, land, and mountain areas.
+      That makes this step a major bridge between sub question 1 and sub
+      question 2. The earlier steps explained how Perlin noise works and how its
+      parameters influence the pattern, while this step shows how those values
+      can be turned into the first structured version of a terrain map.
     </p>
 
     <p>
-      In the next step, this idea can be expanded further by combining multiple
-      maps, such as height and temperature, to create more detailed biome
-      systems.
+      In the next step, this idea is extended further by adding a second map.
+      Instead of using only height, the system will also use temperature, which
+      makes it possible to create more varied biome types.
     </p>
   </div>
 </details>

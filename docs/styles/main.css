@@ -317,3 +317,44 @@ input[type="range"] {
 .generate-button:hover {
   background: #1d4ed8;
 }
+
+.image-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.image-row img {
+  width: 32%;
+  border-radius: 10px;
+}
+
+.reference-list {
+  padding-left: 20px;
+}
+
+.reference-list li {
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+.download-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.download-button {
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 700;
+  border: none;
+}
+
+.download-button:hover {
+  background: #1d4ed8;
+}

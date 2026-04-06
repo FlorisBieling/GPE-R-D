@@ -4,92 +4,70 @@
   </summary>
 
   <div class="step-card">
-    <!-- INTRO -->
-    <h3>Intro</h3>
+    <h3>Goal of This Step</h3>
 
     <p>
-      At this point, the generated data represents a complete biome system.
-      However, it is still only being visualized as 2D images.
+      In the previous steps, Perlin noise was used to generate structured data
+      and interpret it as terrain and biomes. However, the system was still
+      limited to 2D visualizations. While useful for understanding the data, it
+      did not yet result in an actual game environment.
     </p>
 
     <p>
-      To turn this into an actual game environment, the same data must be used
-      to build a 3D world inside Unity.
+      This step continues answering <strong>sub question 2</strong> by showing
+      how the generated data can be applied in Unity to create a 3D world. The
+      noise maps are no longer only displayed, but used to build terrain,
+      textures, and gameplay-relevant systems.
+    </p>
+
+    <h3>Why This Step Was Needed</h3>
+
+    <p>
+      A procedural system only becomes useful in practice when it can be applied
+      inside a game engine. Up to this point, the project demonstrated how data
+      could be generated and interpreted, but it did not yet show how that data
+      could be used to construct an actual environment.
     </p>
 
     <p>
-      This is an important shift in the project. The map is no longer just a
-      texture or preview image, but a set of values that can be used to build
-      terrain, assign biomes, place decorations, and control gameplay rules.
+      This step is important because it transforms the project from a conceptual
+      demonstration into a functional system. The same data that was previously
+      visualized in 2D is now used to generate a 3D world inside Unity.
     </p>
 
-    <h3>Using the Same Data for Multiple Systems</h3>
+    <h3>Reusing the Same Data Across Systems</h3>
 
     <p>
-      In the Unity project, the same generated map data is reused in different
-      ways. The height map is used to define the shape of the terrain, the
-      temperature map helps decide which biome belongs to each position, and the
-      resulting biome data can then be used for textures, decoration placement,
-      and spawn rules.
+      One of the key design choices in this project is that the same generated
+      data is reused across multiple systems. Instead of generating separate
+      data for each feature, the height and temperature maps act as a shared
+      foundation.
     </p>
 
-    <p>This means one generated dataset can drive multiple systems at once:</p>
+    <p>
+      This means that a single dataset can control:
+    </p>
 
     <p>
       - terrain shape<br />
       - biome colors<br />
-      - decoration placement<br />
-      - rules for what can spawn where
+      - object placement<br />
+      - gameplay rules
     </p>
 
-    <h3>How This Works in Unity</h3>
-
     <p>
-      The map generator creates both a height map and a temperature map. These
-      are then combined into a color map that represents the biome result.
-    </p>
-
-    <div class="code-block">
-      <pre><code>float[,] heightMap = Noise.GenerateNoiseMap(
-    mapChunkSize,
-    mapChunkSize,
-    seed,
-    noiseScale,
-    octaves,
-    persistance,
-    lacunarity,
-    centre + offset,
-    normalizeMode
-);
-
-float[,] temperatureMap = Noise.GenerateNoiseMap(
-    mapChunkSize,
-    mapChunkSize,
-    seed + 2,
-    noiseScale * 5f,
-    octaves,
-    persistance,
-    lacunarity,
-    centre + offset,
-    normalizeMode
-);
-
-return new MapData(heightMap, temperatureMap, CombineMaps(heightMap, temperatureMap));</code></pre>
-    </div>
-
-    <p>
-      This shows that the project does not generate only one grayscale map. It
-      generates a set of related data layers that can be used throughout the
-      whole generation pipeline.
+      This approach was chosen because it keeps the system consistent and makes
+      it easier to extend. Changes in the data automatically affect multiple
+      parts of the world at once.
     </p>
 
     <h3>From Height Map to 3D Mesh</h3>
 
     <p>
-      To turn this data into an actual Unity world, the height values are
-      converted into a mesh. Each point in the height map becomes a vertex in 3D
-      space. The x and z coordinates define the position on the ground, while
-      the y coordinate is based on the sampled height value.
+      To create an actual terrain, the height map is converted into a mesh. Each
+      value in the map becomes a vertex in 3D space. The x and z coordinates
+      define the position on the ground, while the y coordinate is based on the
+      height value.
     </p>
 
     <div class="code-block">
@@ -101,61 +79,78 @@ return new MapData(heightMap, temperatureMap, CombineMaps(heightMap, temperature
     </div>
 
     <p>
-      After that, triangles are created between the vertices so Unity can render
-      the surface as terrain. This is the step where the project moves from 2D
-      data into an actual 3D world.
+      By connecting these vertices with triangles, Unity can render the terrain
+      as a continuous surface. This is the point where the system transitions
+      from data representation to visible geometry.
     </p>
 
-    <h3>Applying Biome Colors</h3>
+    <h3>Applying Biome Data as Textures</h3>
 
     <p>
-      The generated biome result is also used visually. After the height and
-      temperature data are combined into biome colors, those colors are
-      converted into a texture and applied to the mesh.
+      The biome system is also applied visually. The combined height and
+      temperature data is converted into a color map, which is then used as a
+      texture on the terrain mesh.
     </p>
 
     <div class="code-block">
       <pre><code>display.DrawMesh(
-    MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshHeightCurve, editorPreviewLOD),
-    TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize)
+    MeshGenerator.GenerateTerrainMesh(
+        mapData.heightMap,
+        meshHeightMultiplier,
+        meshHeightCurve,
+        editorPreviewLOD
+    ),
+    TextureGenerator.TextureFromColorMap(
+        mapData.colorMap,
+        mapChunkSize,
+        mapChunkSize
+    )
 );</code></pre>
     </div>
 
     <p>
-      This means the terrain shape and the terrain appearance both come from the
-      same generated data. The mesh uses the height values, while the texture
-      uses the biome color map.
+      This ensures that the terrain shape and its appearance are both driven by
+      the same procedural data.
     </p>
 
-    <h3>Chunks Instead of One Giant World</h3>
+    <h3>Why Chunk-Based Generation Was Introduced</h3>
 
     <p>
-      In a larger world, generating everything as one single object would not be
-      practical. Because of that, the project uses chunks. The world is divided
-      into separate terrain sections, and only the chunks around the viewer are
-      created and updated.
+      Generating an entire world as a single mesh would quickly become
+      impractical. As the size of the world increases, the number of vertices,
+      calculations, and memory usage grows rapidly.
+    </p>
+
+    <p>
+      To solve this, the world is divided into smaller sections called chunks.
+      Each chunk is generated independently and only when needed.
     </p>
 
     <div class="code-block">
       <pre><code>terrainChunkDictionary.Add(
     viewedChunkCoord,
-    new TerrainChunk(viewedChunkCoord, chunkSize, detailLevels, transform, mapMaterial)
+    new TerrainChunk(
+        viewedChunkCoord,
+        chunkSize,
+        detailLevels,
+        transform,
+        mapMaterial
+    )
 );</code></pre>
     </div>
 
     <p>
-      Each chunk can request its own map data, generate its own mesh, and
-      display its own texture. This makes the world feel continuous, while
-      internally it is built out of smaller manageable pieces.
+      This approach allows the world to feel continuous while internally being
+      built out of manageable pieces. It also prepares the system for real-time
+      generation, where new chunks can be created as the player moves.
     </p>
 
     <h3>Object Placement Based on Biomes</h3>
 
     <p>
-      The generated biome data is also used for object placement. Decorations
-      are not placed completely randomly. Instead, the system first checks which
-      biome belongs to a tile, then reads the decoration layers linked to that
-      biome, and only then decides what can spawn there.
+      The generated biome data is also used for object placement. Instead of
+      placing objects randomly, the system first determines which biome is
+      present at a position, and then decides what can spawn there.
     </p>
 
     <div class="code-block">
@@ -168,31 +163,49 @@ if (biome.decorationLayers == null || layerIndex >= biome.decorationLayers.Lengt
     </div>
 
     <p>
-      Additional rules can then be applied, such as spawn chance, sample
-      interval, distance checks, and an extra noise threshold. This makes
-      decoration placement depend on the generated world data, instead of just
-      scattering objects everywhere.
+      Additional rules can be applied, such as spawn chance, sampling intervals,
+      and distance checks. This makes object placement depend on the generated
+      world, rather than being completely random.
     </p>
 
-    <h3>Why This Matters</h3>
+    <h3>Why This Matters for the Final System</h3>
 
     <p>
-      This step is where the project starts to feel like a real game development
-      system. The generated maps are no longer just images for explanation, but
-      the foundation for terrain generation, biome assignment, chunk loading,
-      and decoration placement.
-    </p>
-
-    <p>
-      In other words, the same procedural data can now drive both how the world
-      looks and how it is actually built inside Unity.
+      This step is where the procedural system becomes usable as part of a real
+      project. The generated data is no longer only a visualization tool, but a
+      complete foundation for building a world inside Unity.
     </p>
 
     <p>
-      In the next step, the focus will move to the downside of this approach:
-      once multiple data layers, chunks, meshes, and object placement are used
-      together, generation becomes much heavier and performance starts to
-      matter.
+      It also aligns with the goal of creating a reusable system. Because the
+      data drives multiple systems at once, the generator can be integrated into
+      different projects without needing to redesign each component separately.
+    </p>
+
+    <p>
+      This makes the system suitable for use as a general tool, for example as a
+      Unity Asset Store package that other developers can use in their own
+      games.
+    </p>
+
+    <h3>What This Step Adds to the System</h3>
+
+    <p>
+      This step transforms the project from a data-driven prototype into a full
+      procedural generation pipeline. The same noise-based data is now used to
+      generate terrain meshes, textures, and object placement in Unity.
+    </p>
+
+    <p>
+      It also introduces the first signs of performance challenges. Generating
+      meshes, textures, and objects for multiple chunks increases the workload
+      significantly, which leads directly into the next step.
+    </p>
+
+    <p>
+      In the next step, the focus shifts to analysing these performance
+      challenges and understanding where the main bottlenecks occur when scaling
+      the system.
     </p>
   </div>
 </details>

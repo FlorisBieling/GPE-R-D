@@ -2,58 +2,98 @@
   <summary class="step-summary">Introduction</summary>
 
   <div class="step-card">
+
+    <!-- SUMMARY / ABSTRACT -->
+    <h3>Overview</h3>
+
     <p>
-      Procedural generation is a technique used to create large and varied
-      worlds using algorithms instead of manually designing every element. This
-      makes it possible to generate terrain, biomes, and environments that would
-      otherwise take a significant amount of time to build by hand.
+      This project explores how procedural terrain can be generated using Perlin noise in Unity,
+      and how such a system can be optimized for real-time use. Starting from simple noise values,
+      the system is gradually extended into a full terrain generation pipeline that includes biome
+      creation, object placement, and performance optimizations.
     </p>
 
     <p>
-      This project explores how a procedural world can be created step by step,
-      starting from simple noise values and gradually building towards a
-      complete system that can generate terrain, assign biomes, and place
-      objects inside Unity.
+      Throughout this article, multiple aspects are covered:
+      how Perlin noise works, how it can be used to generate structured terrain, how multiple data
+      layers can be combined into biomes, and which techniques are required to keep the system
+      performant when scaling to larger worlds.
     </p>
 
+    <p>
+      The final result is a reusable procedural generation system that can be used inside Unity
+      projects, for example as part of a game or as a tool that could be shared on the Unity Asset Store.
+    </p>
+
+    <!-- IMAGES -->
+    <h3>Final Result</h3>
+
+    <p>
+      Below are examples of the final generated terrain and biome system.
+    </p>
+
+    <div class="image-row">
+      <img src="images/result1.png" alt="Generated terrain example 1">
+      <img src="images/result2.png" alt="Generated terrain example 2">
+      <img src="images/result3.png" alt="Generated terrain example 3">
+    </div>
+
+    <p>
+      These images show how height and temperature data are combined to create varied terrain,
+      including oceans, plains, and different types of land.
+    </p>
+
+    <!-- PROBLEM -->
+    <h3>Problem</h3>
+
+    <p>
+      Generating believable terrain procedurally is not straightforward. Pure randomness results
+      in chaotic and unrealistic landscapes, while more structured approaches introduce complexity
+      and performance challenges.
+    </p>
+
+    <p>
+      The main challenge is to create a system that is both visually coherent and efficient enough
+      to run in real time. As the world becomes larger and more complex, the number of calculations
+      increases rapidly, which can lead to performance issues such as frame drops or lag spikes.
+    </p>
+
+    <!-- RESEARCH QUESTION -->
     <h3>Main Question</h3>
 
     <p>
-      How can Perlin noise be used to generate a procedural world in Unity, and
-      how can this system be made efficient enough for real-time use?
+      How can procedural terrain be generated using Perlin noise, and what techniques can be used
+      to improve its performance in Unity?
     </p>
 
+    <!-- SUB QUESTIONS -->
     <h3>Sub Questions</h3>
 
     <p>
-      - How can Perlin noise be used to generate structured terrain data?<br />
-      - How can this data be interpreted into meaningful terrain shapes?<br />
-      - How can multiple data layers, such as height and temperature, be
-      combined into biomes?<br />
-      - How can this data be used to generate an actual 3D world in Unity?<br />
-      - What performance problems occur when scaling this system?<br />
-      - Which techniques can be used to optimize procedural generation?<br />
-      - How can multithreading be applied within Unity?
+      1. What is Perlin noise and how do parameters such as scale, octaves, persistence, and lacunarity influence the result?<br>
+      2. How can Perlin noise be used to generate a structured terrain or biome map?<br>
+      3. What performance challenges occur when generating large procedural worlds in real time?<br>
+      4. What techniques can be used to improve the performance of procedural generation in Unity?
     </p>
 
+    <!-- APPROACH -->
     <h3>Approach</h3>
 
     <p>
-      The project is structured as a sequence of steps. Each step builds on the
-      previous one, gradually transforming abstract data into a functional world
-      generation system.
+      This project is structured as a sequence of steps. Each step builds on the previous one,
+      gradually transforming abstract noise values into a complete procedural world generation system.
     </p>
 
     <p>
-      It starts with generating noise values, then interpreting those values as
-      terrain, combining multiple maps into biome systems, and finally applying
-      the result inside Unity. After that, performance limitations are analyzed
-      and optimized.
+      It starts with generating basic noise, then adds multiple layers to increase complexity,
+      interprets these values as terrain, combines multiple maps into biomes, and finally applies
+      the result inside Unity.
     </p>
 
     <p>
-      This approach makes it possible to understand not only how the system
-      works, but also why each step is necessary.
+      After building the system, performance limitations are analysed and optimized using techniques
+      such as chunk-based generation, level of detail, and multithreading.
     </p>
+
   </div>
 </details>

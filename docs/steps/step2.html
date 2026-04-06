@@ -2,93 +2,133 @@
   <summary class="step-summary">Step 2: More Noise Parameters</summary>
 
   <div class="step-card">
-    <!-- INTRO -->
-    <h3>Intro</h3>
+    <h3>Goal of This Step</h3>
 
     <p>
-      A single layer of noise already creates a structured pattern, but on its
-      own it is still quite limited. The result lacks variation and does not
-      resemble the complexity found in real terrain.
+      The first step introduced Perlin noise as a structured alternative to pure
+      randomness. While that already produced smoother and more usable data, a
+      single layer of noise was still limited. The resulting map could show
+      broad variation, but it lacked the complexity needed for more believable
+      terrain.
     </p>
 
     <p>
-      To increase this complexity, multiple layers of noise can be combined.
-      This allows both large-scale shapes and smaller details to exist within
-      the same map.
+      This step continues answering <strong>sub question 1</strong> by focusing
+      on how the main Perlin noise parameters influence the generated result.
+      In particular, it explores how <strong>octaves</strong>,
+      <strong>persistence</strong>, and <strong>lacunarity</strong> change the
+      balance between large shapes and small details.
+    </p>
+
+    <h3>Why a Single Noise Layer Was Not Enough</h3>
+
+    <p>
+      A single layer of Perlin noise can create smooth variation, but terrain in
+      games usually needs more than one level of structure. Real landscapes are
+      not made up of only broad hills or only tiny details. They contain large
+      overall shapes, medium variation, and smaller rough features at the same
+      time.
+    </p>
+
+    <p>
+      Because of that, using only one layer of noise made the terrain feel too
+      simple. It could provide a base pattern, but not enough richness to be a
+      strong foundation for a larger terrain system.
+    </p>
+
+    <p>
+      The solution is to combine multiple layers of noise. Instead of generating
+      one pattern, the system generates several patterns at different scales and
+      strengths, and blends them together into one final result.
+    </p>
+
+    <h3>Why This Method Was Chosen</h3>
+
+    <p>
+      This layered approach was chosen because it keeps the strengths of Perlin
+      noise while making the result much more flexible. It allows the system to
+      preserve large terrain forms while also adding smaller features on top.
+    </p>
+
+    <p>
+      Other methods could also increase complexity, but this approach fits well
+      with the rest of the project because it stays within the same procedural
+      model. Instead of switching to a completely different generation method,
+      the original Perlin noise system is extended in a controlled way.
     </p>
 
     <h3>What These Parameters Do</h3>
 
-    <p>Let's start with a quick overview of what these parameters do:</p>
-
     <h4>Octaves</h4>
 
     <p>
-      Octaves determine how many of these layers are used. Each octave adds a
-      new layer of noise on top of the previous one. The first octave creates
-      the large, overall shape of the terrain, while the next octaves add
-      smaller and smaller details. This means that increasing the number of
-      octaves adds more detail to the terrain.
+      Octaves determine how many layers of noise are combined. The first octave
+      creates the broadest shapes, while each additional octave adds a new layer
+      of smaller detail. Increasing the number of octaves therefore makes the
+      terrain richer and more varied.
     </p>
 
     <p>
-      You can think of this like drawing: first you sketch the big shapes, and
-      then you add a new layer of details on top, and again, as many times as
-      you want.
+      In practice, this means that low octave values produce smoother and
+      simpler maps, while higher octave values create terrain with more visible
+      structure.
     </p>
 
     <h4>Persistence</h4>
 
     <p>
-      Persistence controls how strong each new layer is compared to the previous
-      one.
+      Persistence controls how much influence each new octave has compared to
+      the previous one. If persistence is low, the higher octaves contribute
+      only a small amount, so the large shapes remain dominant. If persistence
+      is high, the smaller details stay much more visible.
     </p>
 
     <p>
-      If persistence is low, each new layer becomes much weaker, <br />
-      so the terrain is mostly defined by the large shapes.<br />
-
-      If persistence is high, the smaller details remain strong,<br />
-      making the terrain look more rough and detailed.<br />
+      This means persistence directly affects how rough or smooth the final
+      terrain feels.
     </p>
 
     <h4>Lacunarity</h4>
 
     <p>
-      Lacunarity controls how quickly the detail becomes smaller for each new
-      layer.
+      Lacunarity controls how quickly the frequency increases for each
+      additional octave. In other words, it determines how much smaller and more
+      compressed each new layer becomes.
     </p>
 
     <p>
-      If lacunarity is low, the layers are more similar in size, <br />
-      which keeps the terrain smooth.<br />
-      If lacunarity is high, each new layer becomes much smaller, <br />
-      which creates sharper and more detailed patterns.<br />
+      A lower lacunarity keeps the layers more similar, while a higher
+      lacunarity creates a stronger contrast between broad shapes and fine
+      details.
+    </p>
+
+    <h3>How These Parameters Work Together</h3>
+
+    <p>
+      These parameters are closely connected. Octaves determine how many layers
+      are added, persistence determines how visible those extra layers remain,
+      and lacunarity determines how different in scale those layers become.
     </p>
 
     <p>
-      <br />
-      These three parameters always work together:
+      Together, they allow one procedural system to produce very different
+      terrain styles. The result can range from smooth rolling landscapes to
+      rougher and more broken terrain, depending on how the parameters are
+      combined.
     </p>
 
     <p>
-      Octaves decide how many layers you add.<br />
-      Persistence decides how visible each layer is.<br />
-      Lacunarity decides how different each layer looks.
+      This is important because it shows that Perlin noise is not only useful as
+      a single function, but also as a flexible system that can be tuned for
+      different kinds of worlds.
     </p>
 
-    <p>
-      Because of this combination, the terrain is no longer just one smooth
-      pattern, but a mix of large shapes and small details, as you will see in
-      the demo after the code is shown and explained.
-    </p>
-
-    <!-- UNITY CODE -->
     <h3>How This Works in Unity</h3>
 
     <p>
-      In Unity, this is done by looping through multiple layers of Perlin noise.
-      Each layer has its own amplitude and frequency.
+      In Unity, this is done by looping through several octaves of noise for
+      every position in the map. Each octave samples the noise function again,
+      but with a different frequency and amplitude.
     </p>
 
     <div class="code-block">
@@ -109,37 +149,34 @@ for (int i = 0; i < octaves; i++)
 }</code></pre>
     </div>
 
-    <!-- CODE EXPLANATION -->
     <h3>What This Code Does</h3>
 
     <p>
-      The loop runs once for each octave. Every time it runs, a new layer of
-      noise is sampled and added to the total height.
+      The loop runs once for every octave. Each time, the system samples a new
+      layer of Perlin noise and adds it to the total height value. At the start,
+      both amplitude and frequency are set to 1. After each octave, amplitude
+      is multiplied by persistence and frequency is multiplied by lacunarity.
     </p>
 
     <p>
-      At the start, the amplitude and frequency are both set to 1. After each
-      octave, the amplitude is multiplied by persistence and the frequency is
-      multiplied by lacunarity.
+      This means the first octave has the strongest influence and represents the
+      broad shape of the terrain, while later octaves gradually add smaller
+      details. Because of this, the final value is no longer based on one smooth
+      pattern, but on a combination of multiple layers.
     </p>
 
     <p>
-      This means the first layer gives the broad shape of the terrain, while
-      later layers add smaller and smaller details on top of it.
+      This directly answers the first sub question: these parameters do not just
+      exist as extra settings, but fundamentally control how much detail,
+      roughness, and variation the terrain will contain.
     </p>
 
-    <p>
-      So instead of one single smooth pattern, the final map becomes a
-      combination of large forms and fine detail.
-    </p>
-
-    <!-- DEMO -->
     <h3>Interactive Demo</h3>
 
     <p>
-      Below is a demo showing how these parameters affect the noise map. Scale
-      still controls the overall size of the terrain features, while octaves,
-      persistence, and lacunarity change how much extra detail is added.
+      The demo below shows how these parameters influence the generated map. By
+      changing the values, it becomes possible to see how one base noise pattern
+      can be transformed into very different results.
     </p>
 
     <details class="demo-wrapper" open>
@@ -173,9 +210,11 @@ for (int i = 0; i < octaves; i++)
               step="0.1"
               value="2"
             />
+
             <p>
-              Try increasing the octaves to see how more detail is added, and
-              adjust persistence to control how visible that detail becomes.
+              Increasing octaves adds more layers of detail. Persistence changes
+              how strong those extra layers remain, while lacunarity changes how
+              quickly those layers become smaller.
             </p>
 
             <button id="generateNoiseButton2">Generate Map</button>
@@ -188,26 +227,19 @@ for (int i = 0; i < octaves; i++)
       </div>
     </details>
 
-    <!-- USE CASE -->
-    <h3>Why This Is Useful</h3>
+    <h3>What This Step Adds to the System</h3>
 
     <p>
-      Using only one layer of noise often creates terrain that looks too simple
-      and unrealistic. By combining multiple layers, it becomes possible to
-      create terrain that has both large overall shapes and smaller local
-      variation.
+      This step expands the procedural system from a simple proof of concept
+      into something much more suitable for terrain generation. Instead of
+      producing only one smooth pattern, the system can now represent both large
+      structures and smaller variation within the same map.
     </p>
 
     <p>
-      This is useful because terrain in games usually needs different levels of
-      detail. Large hills, smaller bumps, and rougher local changes can all be
-      created from the same system.
-    </p>
-
-    <p>
-      In the next step, the values from the noise map will no longer only be
-      shown as grayscale. Instead, they will be used to assign colors to
-      different height levels, making the terrain easier to read.
+      That makes it a much stronger base for the next step, where the noise
+      values are no longer shown only as grayscale, but are interpreted as
+      meaningful terrain categories such as water, land, and mountains.
     </p>
   </div>
 </details>

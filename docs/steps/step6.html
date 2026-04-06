@@ -2,139 +2,159 @@
   <summary class="step-summary">Step 6: Performance Problems</summary>
 
   <div class="step-card">
-    <!-- INTRO -->
-    <h3>Intro</h3>
-    
+    <h3>Goal of This Step</h3>
+
     <p>
-      In the previous step, the procedural system was extended from simple 2D
-      visualizations to a full Unity world generation pipeline. The same data is
-      now used for terrain meshes, biome assignment, chunk loading, and
-      decoration placement.
+      In the previous step, the procedural system was extended into a complete
+      Unity pipeline, where noise data was used to generate terrain meshes,
+      textures, and object placement. While this makes the system much more
+      useful, it also introduces a new challenge: performance.
     </p>
 
     <p>
-      While this makes the system much more powerful, it also introduces a new
-      problem: procedural generation is not free. As the world becomes larger
-      and more complex, the amount of computation increases rapidly.
+      This step mainly answers <strong>sub question 3</strong>: what performance
+      challenges occur when generating large procedural worlds in real time.
+    </p>
+
+    <h3>Why Performance Becomes a Problem</h3>
+
+    <p>
+      Procedural generation requires a large number of calculations. Even a
+      single map involves iterating over every position in a grid and sampling
+      multiple layers of noise. When this is expanded to a full system with
+      chunks, meshes, and object placement, the amount of work increases
+      rapidly.
+    </p>
+
+    <p>
+      What worked well for small demos in earlier steps becomes much heavier
+      when applied continuously during gameplay. Instead of generating one map,
+      the system now generates multiple chunks, each with their own data and
+      objects.
     </p>
 
     <h3>Where the Cost Comes From</h3>
 
     <p>
-      Generating a single map already requires looping over every position in
-      the grid. For each position, multiple layers of noise are calculated. This
-      means that even a relatively small map already performs thousands of
-      calculations.
+      The main performance cost comes from several combined factors:
     </p>
 
     <p>
-      When this is extended to a full world, the cost increases even further:
+      - nested loops for noise generation<br />
+      - multiple data layers (height and temperature)<br />
+      - mesh generation for each chunk<br />
+      - biome checks for every tile<br />
+      - object placement logic and instantiation
     </p>
 
     <p>
-      - multiple chunks need to be generated<br />
-      - each chunk contains its own height map and temperature map<br />
-      - each tile may run biome checks and decoration logic<br />
-      - meshes need to be created from the height data<br />
+      These systems all build on top of each other. While each individual step
+      may be manageable, together they significantly increase the total
+      workload.
     </p>
 
-    <h3>Nested Loops Become Expensive</h3>
+    <h3>Nested Calculations and Scaling</h3>
 
     <p>
-      A large part of the system relies on nested loops. For example, generating
-      a map involves looping over every x and y position, and inside that loop,
-      iterating over multiple octaves of noise.
-    </p>
-
-    <p>
-      This quickly multiplies the amount of work that needs to be done. A map of
-      size 241 by 241 already means more than 50,000 positions, and each of
-      those positions may run several noise calculations.
+      One of the main reasons performance becomes an issue is the use of nested
+      loops. For every position in the map, multiple noise calculations are
+      performed. When using multiple octaves, each position already requires
+      several function calls.
     </p>
 
     <p>
-      When additional systems are added on top of this, such as decoration
-      placement with multiple attempts per tile, the total number of operations
-      grows even further.
+      When the map size increases, the total number of operations grows very
+      quickly. A relatively small map can already require tens of thousands of
+      calculations, and this cost multiplies when multiple chunks are generated.
     </p>
 
-    <h3>Object Placement Adds More Overhead</h3>
+    <h3>Object Placement as a Bottleneck</h3>
 
     <p>
-      Generating terrain is only part of the cost. Placing objects such as
-      trees, grass, or rocks can be even more expensive.
-    </p>
-
-    <p>For each tile, the system may:</p>
-
-    <p>
-      - check which biome is present<br />
-      - evaluate spawn rules<br />
-      - sample additional noise<br />
-      - apply distance checks<br />
-      - instantiate objects in the scene<br />
+      A major issue observed in this project was object placement. When many
+      objects, such as trees or grass, were instantiated at once, Unity tried to
+      process all of them in a single frame.
     </p>
 
     <p>
-      Even if most of these checks fail, they still need to be executed. This
-      makes decoration placement one of the heavier parts of the system.
+      This caused noticeable lag spikes. The frame would freeze temporarily
+      while all objects were created, which made the system unsuitable for
+      real-time use.
+    </p>
+
+    <p>
+      This shows that object instantiation can be more expensive than the
+      underlying noise calculations. Even if the data generation is efficient,
+      creating large numbers of GameObjects at once can become a major
+      bottleneck.
     </p>
 
     <h3>The Unity Main Thread</h3>
 
     <p>
-      Another important limitation comes from Unity itself. Many operations,
-      such as creating meshes or instantiating GameObjects, must run on the main
-      thread.
+      Another important limitation comes from how Unity handles execution. Most
+      operations, including rendering, physics, and object creation, run on the
+      main thread. This means that if too much work is done at once, the entire
+      frame is delayed.
     </p>
 
     <p>
-      This means that even if the calculations themselves are relatively simple,
-      doing too much work in one frame can block the main thread. When this
-      happens, the frame rate drops and the game can start to stutter.
+      Because of this, even if individual calculations are relatively simple,
+      performing too many of them in a single frame can lead to stuttering or
+      freezing.
     </p>
 
-    <h3>Real-Time Generation vs Small Demos</h3>
+    <h3>Why Real-Time Generation Is Different</h3>
 
     <p>
-      In the earlier steps, maps were generated as small demos. In those cases,
-      it did not matter if generation took some time, because it only happened
-      once.
-    </p>
-
-    <p>
-      In a real-time system, this is very different. New chunks need to be
-      generated while the player is moving through the world. This means the
-      system has to continuously generate new data without interrupting
-      gameplay.
+      In earlier steps, maps were generated as isolated demos. In those cases,
+      performance was less important because the generation only happened once.
     </p>
 
     <p>
-      What works fine for a single preview can become a problem when the same
-      logic is used repeatedly during runtime.
-    </p>
-
-    <h3>Why This Becomes a Problem</h3>
-
-    <p>
-      All of these factors combine into a single issue: as the system scales up,
-      the amount of work grows faster than expected.
+      In a real-time system, this is very different. New terrain chunks must be
+      generated continuously as the player moves through the world. This means
+      the system must balance generation speed with frame stability.
     </p>
 
     <p>
-      More data, more layers, more objects, and more chunks all increase the
-      computational cost. Without careful handling, this can lead to slow
-      generation, frame drops, or even freezing during gameplay.
+      What was acceptable in a static preview becomes a problem when the same
+      work needs to be repeated during gameplay.
+    </p>
+
+    <h3>Why These Problems Matter</h3>
+
+    <p>
+      These performance issues highlight an important limitation of procedural
+      generation. While it is powerful, it is not free. As the system becomes
+      more complex, the cost increases quickly.
     </p>
 
     <p>
-      Because of this, performance is not just an optimization step, but an
-      essential part of making procedural generation usable in practice.
+      Without optimization, the system can suffer from frame drops, lag spikes,
+      or unresponsive behavior. This makes it unsuitable for real-time
+      applications such as games.
     </p>
 
     <p>
-      In the next step, different techniques will be explored to reduce this
-      cost and make the system more efficient.
+      This directly answers sub question 3: generating large procedural worlds
+      in real time introduces significant computational cost, especially when
+      combining multiple systems such as noise generation, mesh creation, and
+      object placement.
+    </p>
+
+    <h3>What This Step Adds to the System</h3>
+
+    <p>
+      This step does not introduce a new feature, but instead analyses the
+      limitations of the current system. It identifies where the main bottlenecks
+      occur and why the current approach is not yet efficient enough.
+    </p>
+
+    <p>
+      Understanding these problems is essential before applying optimizations.
+      In the next step, different techniques will be explored to reduce the
+      workload and improve performance.
     </p>
   </div>
 </details>
