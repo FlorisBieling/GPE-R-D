@@ -40,12 +40,13 @@ body {
 
 .step-links {
   display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 8px;
   margin-top: 12px;
 }
 
 .step-links a {
+  display: block;
   color: #93c5fd;
   text-decoration: none;
   font-weight: 700;
