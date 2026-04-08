@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class MapGenerator : MonoBehaviour
 {
-    public enum DrawMode { HeightNoiseMap, TemperatureNoiseMap, ColorMap, Mesh };
+    public enum DrawMode { HeightNoiseMap, TemperatureNoiseMap, ColorMap, Mesh }
     public DrawMode drawMode;
 
     public Noise.NormalizeMode normalizeMode;
@@ -16,14 +16,12 @@ public class MapGenerator : MonoBehaviour
     public int editorPreviewLOD;
 
     public float noiseScale;
-
     public int octaves;
 
     [Range(0, 1)]
     public float persistance;
 
     public float lacunarity;
-
     public int seed;
 
     [Range(0, 10)]
@@ -36,6 +34,13 @@ public class MapGenerator : MonoBehaviour
 
     public bool autoUpdate;
 
+    [Header("Biome Color Smoothing")]
+    [Range(0, 3)]
+    public int biomeColorSmoothRadius = 1;
+
+    [Range(0f, 1f)]
+    public float biomeColorSmoothStrength = 0.25f;
+
     public HeightTypes[] heightTypes;
 
     Queue<MapThreadInfo<MapData>> mapDataThreadInfoQueue = new Queue<MapThreadInfo<MapData>>();
@@ -45,7 +50,6 @@ public class MapGenerator : MonoBehaviour
     public void DrawMapInEditor()
     {
         MapData mapData = GenerateMapData(Vector2.zero);
-
         MapDisplay display = FindObjectOfType<MapDisplay>();
 
         if (drawMode == DrawMode.HeightNoiseMap)
@@ -201,7 +205,131 @@ public class MapGenerator : MonoBehaviour
             normalizeMode
         );
 
-        return new MapData(heightMap, temperatureMap, CombineMaps(heightMap, temperatureMap));
+        Color[] colorMap = CombineMaps(heightMap, temperatureMap);
+
+        return new MapData(heightMap, temperatureMap, colorMap);
+    }
+
+    public Color[] CombineMaps(float[,] heightMap, float[,] temperatureMap)
+    {
+        Color[] baseColorMap = new Color[mapChunkSize * mapChunkSize];
+
+        for (int y = 0; y < mapChunkSize; y++)
+        {
+            for (int x = 0; x < mapChunkSize; x++)
+            {
+                float currentHeight = heightMap[x, y];
+                float currentTemperature = temperatureMap[x, y];
+                baseColorMap[y * mapChunkSize + x] = GetBaseBiomeColor(currentHeight, currentTemperature);
+            }
+        }
+
+        if (biomeColorSmoothRadius <= 0 || biomeColorSmoothStrength <= 0f)
+        {
+            return baseColorMap;
+        }
+
+        return SmoothColorMap(baseColorMap, biomeColorSmoothRadius, biomeColorSmoothStrength);
+    }
+
+    Color[] SmoothColorMap(Color[] sourceMap, int radius, float blendStrength)
+    {
+        Color[] smoothedMap = new Color[sourceMap.Length];
+
+        for (int y = 0; y < mapChunkSize; y++)
+        {
+            for (int x = 0; x < mapChunkSize; x++)
+            {
+                int centerIndex = y * mapChunkSize + x;
+                Color centerColor = sourceMap[centerIndex];
+
+                Color accumulatedColor = centerColor;
+                float totalWeight = 1f;
+
+                for (int offsetY = -radius; offsetY <= radius; offsetY++)
+                {
+                    for (int offsetX = -radius; offsetX <= radius; offsetX++)
+                    {
+                        if (offsetX == 0 && offsetY == 0)
+                        {
+                            continue;
+                        }
+
+                        int sampleX = Mathf.Clamp(x + offsetX, 0, mapChunkSize - 1);
+                        int sampleY = Mathf.Clamp(y + offsetY, 0, mapChunkSize - 1);
+                        int sampleIndex = sampleY * mapChunkSize + sampleX;
+
+                        Color neighborColor = sourceMap[sampleIndex];
+
+                        if (neighborColor == centerColor)
+                        {
+                            continue;
+                        }
+
+                        float distance = Mathf.Sqrt(offsetX * offsetX + offsetY * offsetY);
+                        float weight = blendStrength / (1f + distance);
+
+                        accumulatedColor += neighborColor * weight;
+                        totalWeight += weight;
+                    }
+                }
+
+                smoothedMap[centerIndex] = accumulatedColor / totalWeight;
+            }
+        }
+
+        return smoothedMap;
+    }
+
+    Color GetBaseBiomeColor(float currentHeight, float currentTemperature)
+    {
+        return GetBiome(currentHeight, currentTemperature).color;
+    }
+
+    public Color GetColor(float currentHeight, float currentTemperature)
+    {
+        return GetBaseBiomeColor(currentHeight, currentTemperature);
+    }
+
+    public BiomeType GetBiome(float currentHeight, float currentTemperature)
+    {
+        BiomeType selectedBiome = default;
+        bool foundBiome = false;
+
+        for (int i = 0; i < heightTypes.Length; i++)
+        {
+            if (currentHeight < heightTypes[i].height)
+            {
+                continue;
+            }
+
+            if (heightTypes[i].biomeTypes == null || heightTypes[i].biomeTypes.Length == 0)
+            {
+                continue;
+            }
+
+            for (int j = 0; j < heightTypes[i].biomeTypes.Length; j++)
+            {
+                if (currentTemperature >= heightTypes[i].biomeTypes[j].temperature)
+                {
+                    selectedBiome = heightTypes[i].biomeTypes[j];
+                    foundBiome = true;
+                }
+            }
+        }
+
+        if (!foundBiome)
+        {
+            if (heightTypes != null && heightTypes.Length > 0 &&
+                heightTypes[0].biomeTypes != null && heightTypes[0].biomeTypes.Length > 0)
+            {
+                return heightTypes[0].biomeTypes[0];
+            }
+
+            return default;
+        }
+
+        return selectedBiome;
     }
 
     DecorationSpawnData[] GenerateDecorationData(MapData mapData, Vector2 chunkPosition)
@@ -364,7 +492,7 @@ public class MapGenerator : MonoBehaviour
         return (float)(min + (max - min) * random.NextDouble());
     }
 
-    private void OnValidate()
+    void OnValidate()
     {
         if (lacunarity < 1)
         {
@@ -375,6 +503,9 @@ public class MapGenerator : MonoBehaviour
         {
             octaves = 0;
         }
+
+        biomeColorSmoothRadius = Mathf.Max(0, biomeColorSmoothRadius);
+        biomeColorSmoothStrength = Mathf.Clamp01(biomeColorSmoothStrength);
     }
 
     struct MapThreadInfo<T>
@@ -387,49 +518,6 @@ public class MapGenerator : MonoBehaviour
             this.callback = callback;
             this.parameter = parameter;
         }
-    }
-
-    public Color[] CombineMaps(float[,] heightMap, float[,] temperatureMap)
-    {
-        Color[] colorMap = new Color[mapChunkSize * mapChunkSize];
-
-        for (int y = 0; y < mapChunkSize; y++)
-        {
-            for (int x = 0; x < mapChunkSize; x++)
-            {
-                float currentHeight = heightMap[x, y];
-                float currentTemperature = temperatureMap[x, y];
-                colorMap[y * mapChunkSize + x] = GetColor(currentHeight, currentTemperature);
-            }
-        }
-
-        return colorMap;
-    }
-
-    public Color GetColor(float currentHeight, float currentTemperature)
-    {
-        return GetBiome(currentHeight, currentTemperature).color;
-    }
-
-    public BiomeType GetBiome(float currentHeight, float currentTemperature)
-    {
-        BiomeType biomeType = new BiomeType();
-
-        for (int i = 0; i < heightTypes.Length; i++)
-        {
-            if (currentHeight >= heightTypes[i].height)
-            {
-                for (int j = 0; j < heightTypes[i].biomeTypes.Length; j++)
-                {
-                    if (currentTemperature >= heightTypes[i].biomeTypes[j].temperature)
-                    {
-                        biomeType = heightTypes[i].biomeTypes[j];
-                    }
-                }
-            }
-        }
-
-        return biomeType;
     }
 
     class LayerSpawnCache
