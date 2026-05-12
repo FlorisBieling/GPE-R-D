@@ -659,7 +659,20 @@ MonoBehaviour:
     maxMoisture: 1
     priority: 90
     color: {r: 1, g: 0.77530146, b: 0.3226415, a: 0}
-    decorationLayers: []
+    decorationLayers:
+    - name: Palm tree
+      prefabs:
+      - {fileID: 1164551821300326767, guid: bdd62959ca804ad4cad360f10951474c, type: 3}
+      - {fileID: 5958503510810325762, guid: caf876579c81a714abfebb0ffe831dea, type: 3}
+      spawnChance: 0.35
+      noiseScale: 40
+      noiseThreshold: 0.68
+      minDistance: 50
+      attemptsPerTile: 1
+      sampleInterval: 6
+      randomOffsetRange: {x: 2.5, y: 2.5}
+      randomScaleRange: {x: 0.8, y: 1.5}
+      noiseOffset: {x: 500, y: 500}
   - name: Desert
     allowColorBlend: 1
     minHeight: 0.36
@@ -670,7 +683,19 @@ MonoBehaviour:
     maxMoisture: 0.35
     priority: 10
     color: {r: 0.81886786, g: 0.59616584, b: 0, a: 0}
-    decorationLayers: []
+    decorationLayers:
+    - name: Plant
+      prefabs:
+      - {fileID: 4765942067774546743, guid: c6f463a46fe7d4740892b20cd89de964, type: 3}
+      spawnChance: 0.35
+      noiseScale: 40
+      noiseThreshold: 0.68
+      minDistance: 13
+      attemptsPerTile: 1
+      sampleInterval: 6
+      randomOffsetRange: {x: 2.5, y: 2.5}
+      randomScaleRange: {x: 0.8, y: 1.25}
+      noiseOffset: {x: 700, y: 1600}
   - name: Grass
     allowColorBlend: 1
     minHeight: 0.36
@@ -682,18 +707,18 @@ MonoBehaviour:
     priority: 10
     color: {r: 0, g: 1, b: 0, a: 0}
     decorationLayers:
-    - name: Bushes
+    - name: Grass
       prefabs:
-      - {fileID: 0}
-      spawnChance: 0
-      noiseScale: 0
-      noiseThreshold: 0
-      minDistance: 0
-      attemptsPerTile: 0
-      sampleInterval: 0
-      randomOffsetRange: {x: 0, y: 0}
-      randomScaleRange: {x: 0, y: 0}
-      noiseOffset: {x: 0, y: 0}
+      - {fileID: 8822501513089188031, guid: 92d6b775d28afc0458373cc98316c000, type: 3}
+      spawnChance: 0.45
+      noiseScale: 22
+      noiseThreshold: 0.58
+      minDistance: 5
+      attemptsPerTile: 1
+      sampleInterval: 4
+      randomOffsetRange: {x: 1.5, y: 1.5}
+      randomScaleRange: {x: 0.8, y: 1.3}
+      noiseOffset: {x: 200, y: 500}
   - name: Forest
     allowColorBlend: 1
     minHeight: 0.36
@@ -704,7 +729,21 @@ MonoBehaviour:
     maxMoisture: 1
     priority: 20
     color: {r: 0.066479534, g: 0.4716981, b: 0, a: 0}
-    decorationLayers: []
+    decorationLayers:
+    - name: Trees
+      prefabs:
+      - {fileID: 4656172894289465106, guid: 6433fe27d67e3054e9efd549a25dd721, type: 3}
+      - {fileID: 857816146953487126, guid: 6e889a8a82521434685adf44adad2c2e, type: 3}
+      - {fileID: 1274435398749062841, guid: 8ffe12550a7f7334da00f548c5b88744, type: 3}
+      spawnChance: 0.85
+      noiseScale: 30
+      noiseThreshold: 0.5
+      minDistance: 4
+      attemptsPerTile: 1
+      sampleInterval: 4
+      randomOffsetRange: {x: 2, y: 2}
+      randomScaleRange: {x: 0.85, y: 1.35}
+      noiseOffset: {x: 1000, y: 300}
   - name: Snow
     allowColorBlend: 1
     minHeight: 0.68
