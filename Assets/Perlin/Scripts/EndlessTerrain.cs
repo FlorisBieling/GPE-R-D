@@ -278,8 +278,9 @@ public class EndlessTerrain : MonoBehaviour
 
             float currentHeight = mapData.heightMap[spawnData.tileX, spawnData.tileY];
             float currentTemperature = mapData.temperatureMap[spawnData.tileX, spawnData.tileY];
+            float currentMoisture = mapData.moistureMap[spawnData.tileX, spawnData.tileY];
 
-            BiomeType biome = mapGenerator.GetBiome(currentHeight, currentTemperature);
+            BiomeType biome = mapGenerator.GetBiome(currentHeight, currentTemperature, currentMoisture);
 
             if (biome.decorationLayers == null || spawnData.layerIndex < 0 || spawnData.layerIndex >= biome.decorationLayers.Length)
             {
