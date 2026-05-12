@@ -240,6 +240,7 @@ public class MapGenerator : MonoBehaviour
     public Color[] CombineMaps(float[,] heightMap, float[,] temperatureMap, float[,] moistureMap)
     {
         Color[] baseColorMap = new Color[mapChunkSize * mapChunkSize];
+        int[] biomeIndexMap = new int[mapChunkSize * mapChunkSize];
 
         for (int y = 0; y < mapChunkSize; y++)
         {
@@ -249,7 +250,11 @@ public class MapGenerator : MonoBehaviour
                 float currentTemperature = temperatureMap[x, y];
                 float currentMoisture = moistureMap[x, y];
 
-                baseColorMap[y * mapChunkSize + x] = GetBaseBiomeColor(currentHeight, currentTemperature, currentMoisture);
+                int biomeIndex = GetBiomeIndex(currentHeight, currentTemperature, currentMoisture);
+                int index = y * mapChunkSize + x;
+
+                biomeIndexMap[index] = biomeIndex;
+                baseColorMap[index] = biomes[biomeIndex].color;
             }
         }
 
@@ -258,10 +263,73 @@ public class MapGenerator : MonoBehaviour
             return baseColorMap;
         }
 
-        return SmoothColorMap(baseColorMap, biomeColorSmoothRadius, biomeColorSmoothStrength);
+        return SmoothColorMap(baseColorMap, biomeIndexMap, biomeColorSmoothRadius, biomeColorSmoothStrength);
     }
 
-    Color[] SmoothColorMap(Color[] originalColorMap, int radius, float strength)
+    public int GetBiomeIndex(float currentHeight, float currentTemperature, float currentMoisture)
+    {
+        if (biomes == null || biomes.Length == 0)
+        {
+            return -1;
+        }
+
+        int selectedBiomeIndex = -1;
+        int bestPriority = int.MinValue;
+
+        for (int i = 0; i < biomes.Length; i++)
+        {
+            BiomeType biome = biomes[i];
+
+            bool heightMatches = currentHeight >= biome.minHeight && currentHeight <= biome.maxHeight;
+            bool temperatureMatches = currentTemperature >= biome.minTemperature && currentTemperature <= biome.maxTemperature;
+            bool moistureMatches = currentMoisture >= biome.minMoisture && currentMoisture <= biome.maxMoisture;
+
+            if (!heightMatches || !temperatureMatches || !moistureMatches)
+            {
+                continue;
+            }
+
+            if (selectedBiomeIndex == -1 || biome.priority > bestPriority)
+            {
+                selectedBiomeIndex = i;
+                bestPriority = biome.priority;
+            }
+        }
+
+        if (selectedBiomeIndex != -1)
+        {
+            return selectedBiomeIndex;
+        }
+
+        return GetClosestBiomeIndex(currentHeight, currentTemperature, currentMoisture);
+    }
+
+    int GetClosestBiomeIndex(float currentHeight, float currentTemperature, float currentMoisture)
+    {
+        int closestBiomeIndex = 0;
+        float bestScore = float.MaxValue;
+
+        for (int i = 0; i < biomes.Length; i++)
+        {
+            BiomeType biome = biomes[i];
+
+            float heightDistance = GetRangeDistance(currentHeight, biome.minHeight, biome.maxHeight);
+            float temperatureDistance = GetRangeDistance(currentTemperature, biome.minTemperature, biome.maxTemperature);
+            float moistureDistance = GetRangeDistance(currentMoisture, biome.minMoisture, biome.maxMoisture);
+
+            float score = heightDistance + temperatureDistance + moistureDistance;
+
+            if (score < bestScore)
+            {
+                bestScore = score;
+                closestBiomeIndex = i;
+            }
+        }
+
+        return closestBiomeIndex;
+    }
+
+    Color[] SmoothColorMap(Color[] originalColorMap, int[] biomeIndexMap, int radius, float strength)
     {
         Color[] smoothedColorMap = new Color[originalColorMap.Length];
 
@@ -269,8 +337,26 @@ public class MapGenerator : MonoBehaviour
         {
             for (int x = 0; x < mapChunkSize; x++)
             {
+                int index = y * mapChunkSize + x;
+                int currentBiomeIndex = biomeIndexMap[index];
+
+                if (currentBiomeIndex < 0)
+                {
+                    smoothedColorMap[index] = originalColorMap[index];
+                    continue;
+                }
+
+                BiomeType currentBiome = biomes[currentBiomeIndex];
+
+                if (!currentBiome.allowColorBlend)
+                {
+                    smoothedColorMap[index] = originalColorMap[index];
+                    continue;
+                }
+
                 Color averageColor = Color.black;
-                int sampleCount = 0;
+                float totalWeight = 0f;
+                bool foundBlendableNeighbor = false;
 
                 for (int offsetY = -radius; offsetY <= radius; offsetY++)
                 {
@@ -278,15 +364,41 @@ public class MapGenerator : MonoBehaviour
                     {
                         int sampleX = Mathf.Clamp(x + offsetX, 0, mapChunkSize - 1);
                         int sampleY = Mathf.Clamp(y + offsetY, 0, mapChunkSize - 1);
+                        int sampleIndex = sampleY * mapChunkSize + sampleX;
+                        int neighborBiomeIndex = biomeIndexMap[sampleIndex];
 
-                        averageColor += originalColorMap[sampleY * mapChunkSize + sampleX];
-                        sampleCount++;
+                        if (neighborBiomeIndex < 0)
+                        {
+                            continue;
+                        }
+
+                        BiomeType neighborBiome = biomes[neighborBiomeIndex];
+
+                        if (!neighborBiome.allowColorBlend)
+                        {
+                            continue;
+                        }
+
+                        if (neighborBiomeIndex != currentBiomeIndex)
+                        {
+                            foundBlendableNeighbor = true;
+                        }
+
+                        float distance = Mathf.Sqrt(offsetX * offsetX + offsetY * offsetY);
+                        float weight = 1f / (1f + distance);
+
+                        averageColor += originalColorMap[sampleIndex] * weight;
+                        totalWeight += weight;
                     }
                 }
 
-                averageColor /= sampleCount;
+                if (!foundBlendableNeighbor || totalWeight <= 0f)
+                {
+                    smoothedColorMap[index] = originalColorMap[index];
+                    continue;
+                }
 
-                int index = y * mapChunkSize + x;
+                averageColor /= totalWeight;
                 smoothedColorMap[index] = Color.Lerp(originalColorMap[index], averageColor, strength);
             }
         }
@@ -311,42 +423,8 @@ public class MapGenerator : MonoBehaviour
 
     public BiomeType GetBiome(float currentHeight, float currentTemperature, float currentMoisture)
     {
-        if (biomes == null || biomes.Length == 0)
-        {
-            return default;
-        }
-
-        BiomeType selectedBiome = default;
-        bool foundBiome = false;
-        int bestPriority = int.MinValue;
-
-        for (int i = 0; i < biomes.Length; i++)
-        {
-            BiomeType biome = biomes[i];
-
-            bool heightMatches = currentHeight >= biome.minHeight && currentHeight <= biome.maxHeight;
-            bool temperatureMatches = currentTemperature >= biome.minTemperature && currentTemperature <= biome.maxTemperature;
-            bool moistureMatches = currentMoisture >= biome.minMoisture && currentMoisture <= biome.maxMoisture;
-
-            if (!heightMatches || !temperatureMatches || !moistureMatches)
-            {
-                continue;
-            }
-
-            if (!foundBiome || biome.priority > bestPriority)
-            {
-                selectedBiome = biome;
-                bestPriority = biome.priority;
-                foundBiome = true;
-            }
-        }
-
-        if (foundBiome)
-        {
-            return selectedBiome;
-        }
-
-        return GetClosestBiome(currentHeight, currentTemperature, currentMoisture);
+        int biomeIndex = GetBiomeIndex(currentHeight, currentTemperature, currentMoisture);
+        return biomes[biomeIndex];
     }
 
     BiomeType GetClosestBiome(float currentHeight, float currentTemperature, float currentMoisture)
@@ -649,6 +727,8 @@ public struct DecorationLayer
 public struct BiomeType
 {
     public string name;
+
+    public bool allowColorBlend;
 
     [Range(0f, 1f)]
     public float minHeight;

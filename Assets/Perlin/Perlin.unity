@@ -610,7 +610,7 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0.33333334
     - serializedVersion: 3
-      time: 0.4
+      time: 0.3
       value: 0
       inSlope: 0
       outSlope: 0
@@ -621,8 +621,8 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 1
       value: 1
-      inSlope: 1.6666666
-      outSlope: 1.6666666
+      inSlope: 1.4285715
+      outSlope: 1.4285715
       tangentMode: 34
       weightedMode: 0
       inWeight: 0.33333334
@@ -631,7 +631,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   autoUpdate: 1
-  biomeColorSmoothRadius: 1
+  biomeColorSmoothRadius: 3
   biomeColorSmoothStrength: 0.25
   temperatureNoiseScaleMultiplier: 5
   temperatureOffset: {x: 1000, y: 0}
@@ -639,6 +639,7 @@ MonoBehaviour:
   moistureOffset: {x: 0, y: 1000}
   biomes:
   - name: Water
+    allowColorBlend: 0
     minHeight: 0
     maxHeight: 0.3
     minTemperature: 0
@@ -649,6 +650,7 @@ MonoBehaviour:
     color: {r: 0, g: 0, b: 1, a: 0}
     decorationLayers: []
   - name: Beach
+    allowColorBlend: 0
     minHeight: 0.3
     maxHeight: 0.38
     minTemperature: 0
@@ -659,6 +661,7 @@ MonoBehaviour:
     color: {r: 1, g: 0.77530146, b: 0.3226415, a: 0}
     decorationLayers: []
   - name: Desert
+    allowColorBlend: 1
     minHeight: 0.36
     maxHeight: 0.75
     minTemperature: 0.65
@@ -669,6 +672,7 @@ MonoBehaviour:
     color: {r: 0.81886786, g: 0.59616584, b: 0, a: 0}
     decorationLayers: []
   - name: Grass
+    allowColorBlend: 1
     minHeight: 0.36
     maxHeight: 0.75
     minTemperature: 0.35
@@ -677,8 +681,21 @@ MonoBehaviour:
     maxMoisture: 0.65
     priority: 10
     color: {r: 0, g: 1, b: 0, a: 0}
-    decorationLayers: []
+    decorationLayers:
+    - name: Bushes
+      prefabs:
+      - {fileID: 0}
+      spawnChance: 0
+      noiseScale: 0
+      noiseThreshold: 0
+      minDistance: 0
+      attemptsPerTile: 0
+      sampleInterval: 0
+      randomOffsetRange: {x: 0, y: 0}
+      randomScaleRange: {x: 0, y: 0}
+      noiseOffset: {x: 0, y: 0}
   - name: Forest
+    allowColorBlend: 1
     minHeight: 0.36
     maxHeight: 0.8
     minTemperature: 0.25
@@ -689,6 +706,7 @@ MonoBehaviour:
     color: {r: 0.066479534, g: 0.4716981, b: 0, a: 0}
     decorationLayers: []
   - name: Snow
+    allowColorBlend: 1
     minHeight: 0.68
     maxHeight: 1
     minTemperature: 0
@@ -699,6 +717,7 @@ MonoBehaviour:
     color: {r: 0.86415094, g: 0.86415094, b: 0.86415094, a: 0}
     decorationLayers: []
   - name: Mountain
+    allowColorBlend: 1
     minHeight: 0.78
     maxHeight: 1
     minTemperature: 0.35
