@@ -17,5 +17,15 @@ public class MapDisplay : MonoBehaviour
     {
         meshFilter.sharedMesh = meshData.CreateMesh();
         meshRenderer.sharedMaterial.mainTexture = texture;
+        meshRenderer.sharedMaterial.SetTexture("_ColorMap", texture);
+    }
+
+    public void DrawMesh(MeshData meshData, Texture2D colorTexture, Texture2D controlTextureA, Texture2D controlTextureB)
+    {
+        meshFilter.sharedMesh = meshData.CreateMesh();
+        meshRenderer.sharedMaterial.mainTexture = colorTexture;
+        meshRenderer.sharedMaterial.SetTexture("_ColorMap", colorTexture);
+        meshRenderer.sharedMaterial.SetTexture("_ControlMapA", controlTextureA);
+        meshRenderer.sharedMaterial.SetTexture("_ControlMapB", controlTextureB);
     }
 }

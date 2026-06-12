@@ -149,8 +149,14 @@ public class EndlessTerrain : MonoBehaviour
             this.mapData = mapData;
             mapDataRecieved = true;
 
-            Texture2D texture = TextureGenerator.TextureFromColorMap(mapData.colorMap, MapGenerator.mapChunkSize, MapGenerator.mapChunkSize);
-            meshRenderer.material.mainTexture = texture;
+            Texture2D colorTexture = TextureGenerator.TextureFromColorMap(mapData.colorMap, MapGenerator.mapChunkSize, MapGenerator.mapChunkSize);
+            Texture2D controlTextureA = TextureGenerator.TextureFromColorMap(mapData.biomeControlMapA, MapGenerator.mapChunkSize, MapGenerator.mapChunkSize);
+            Texture2D controlTextureB = TextureGenerator.TextureFromColorMap(mapData.biomeControlMapB, MapGenerator.mapChunkSize, MapGenerator.mapChunkSize);
+
+            meshRenderer.material.mainTexture = colorTexture;
+            meshRenderer.material.SetTexture("_ColorMap", colorTexture);
+            meshRenderer.material.SetTexture("_ControlMapA", controlTextureA);
+            meshRenderer.material.SetTexture("_ControlMapB", controlTextureB);
 
             if (!decorationDataRequested)
             {

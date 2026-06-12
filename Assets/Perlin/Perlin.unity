@@ -637,8 +637,24 @@ MonoBehaviour:
   temperatureOffset: {x: 1000, y: 0}
   moistureNoiseScaleMultiplier: 6
   moistureOffset: {x: 0, y: 1000}
+  biomeBlendSoftness: 0.08
+  biomeBoundaryNoiseScale: 65
+  biomeBoundaryNoiseHeightInfluence: 0.045
+  biomePatchNoiseScale: 45
+  biomePatchNoiseStrength: 0.25
+  biomeBlendNoiseOffset: {x: 0, y: 0}
+  useSnowMask: 1
+  snowStartHeight: 0.75
+  snowEndHeight: 0.85
+  snowLineNoiseScale: 70
+  snowLineNoiseHeightInfluence: 0.08
+  snowHoleNoiseScale: 25
+  snowHoleStrength: 0.35
+  snowHoleThreshold: 0.35
+  snowNoiseOffset: {x: 0, y: 0}
   biomes:
   - name: Water
+    textureType: 1
     allowColorBlend: 0
     minHeight: 0
     maxHeight: 0.3
@@ -650,6 +666,7 @@ MonoBehaviour:
     color: {r: 0, g: 0, b: 1, a: 0}
     decorationLayers: []
   - name: Beach
+    textureType: 2
     allowColorBlend: 0
     minHeight: 0.3
     maxHeight: 0.38
@@ -674,6 +691,7 @@ MonoBehaviour:
       randomScaleRange: {x: 0.8, y: 1.5}
       noiseOffset: {x: 500, y: 500}
   - name: Desert
+    textureType: 5
     allowColorBlend: 1
     minHeight: 0.36
     maxHeight: 0.75
@@ -697,6 +715,7 @@ MonoBehaviour:
       randomScaleRange: {x: 0.8, y: 1.25}
       noiseOffset: {x: 700, y: 1600}
   - name: Grass
+    textureType: 3
     allowColorBlend: 1
     minHeight: 0.36
     maxHeight: 0.75
@@ -720,6 +739,7 @@ MonoBehaviour:
       randomScaleRange: {x: 0.8, y: 1.3}
       noiseOffset: {x: 200, y: 500}
   - name: Forest
+    textureType: 4
     allowColorBlend: 1
     minHeight: 0.36
     maxHeight: 0.8
@@ -745,6 +765,7 @@ MonoBehaviour:
       randomScaleRange: {x: 0.85, y: 1.35}
       noiseOffset: {x: 1000, y: 300}
   - name: Snow
+    textureType: 7
     allowColorBlend: 1
     minHeight: 0.68
     maxHeight: 1
@@ -756,6 +777,7 @@ MonoBehaviour:
     color: {r: 0.86415094, g: 0.86415094, b: 0.86415094, a: 0}
     decorationLayers: []
   - name: Mountain
+    textureType: 6
     allowColorBlend: 1
     minHeight: 0.78
     maxHeight: 1
@@ -801,7 +823,7 @@ MonoBehaviour:
   - lod: 6
     visibleDistanceThreshold: 600
   viewer: {fileID: 1266748774}
-  mapMaterial: {fileID: 2100000, guid: 4a543df54a1414146a6d522e72be248c, type: 2}
+  mapMaterial: {fileID: 2100000, guid: 0a49e0a797b99ee4c93e0d729427f9b4, type: 2}
 --- !u!1 &1266748770
 GameObject:
   m_ObjectHideFlags: 0

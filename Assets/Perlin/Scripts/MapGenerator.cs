@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class MapGenerator : MonoBehaviour
 {
-    public enum DrawMode { HeightNoiseMap, TemperatureNoiseMap, MoistureNoiseMap, ColorMap, Mesh }
+    public enum DrawMode { HeightNoiseMap, TemperatureNoiseMap, MoistureNoiseMap, ColorMap, BiomeControlMapA, BiomeControlMapB, Mesh }
     public DrawMode drawMode;
 
     public Noise.NormalizeMode normalizeMode;
@@ -48,6 +48,46 @@ public class MapGenerator : MonoBehaviour
     public float moistureNoiseScaleMultiplier = 6f;
     public Vector2 moistureOffset;
 
+    [Header("Biome Texture Blending")]
+    [Range(0f, 0.5f)]
+    public float biomeBlendSoftness = 0.08f;
+
+    public float biomeBoundaryNoiseScale = 65f;
+
+    [Range(0f, 0.25f)]
+    public float biomeBoundaryNoiseHeightInfluence = 0.045f;
+
+    public float biomePatchNoiseScale = 45f;
+
+    [Range(0f, 1f)]
+    public float biomePatchNoiseStrength = 0.25f;
+
+    public Vector2 biomeBlendNoiseOffset;
+
+    [Header("Snow Texture Blend")]
+    public bool useSnowMask = true;
+
+    [Range(0f, 1f)]
+    public float snowStartHeight = 0.75f;
+
+    [Range(0f, 1f)]
+    public float snowEndHeight = 0.85f;
+
+    public float snowLineNoiseScale = 70f;
+
+    [Range(0f, 0.25f)]
+    public float snowLineNoiseHeightInfluence = 0.08f;
+
+    public float snowHoleNoiseScale = 25f;
+
+    [Range(0f, 1f)]
+    public float snowHoleStrength = 0.25f;
+
+    [Range(0f, 1f)]
+    public float snowHoleThreshold = 0.45f;
+
+    public Vector2 snowNoiseOffset;
+
     [Header("Biomes")]
     public BiomeType[] biomes;
 
@@ -85,11 +125,21 @@ public class MapGenerator : MonoBehaviour
         {
             display.DrawTexture(TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
         }
+        else if (drawMode == DrawMode.BiomeControlMapA)
+        {
+            display.DrawTexture(TextureGenerator.TextureFromColorMap(mapData.biomeControlMapA, mapChunkSize, mapChunkSize));
+        }
+        else if (drawMode == DrawMode.BiomeControlMapB)
+        {
+            display.DrawTexture(TextureGenerator.TextureFromColorMap(mapData.biomeControlMapB, mapChunkSize, mapChunkSize));
+        }
         else if (drawMode == DrawMode.Mesh)
         {
             display.DrawMesh(
                 MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshHeightCurve, editorPreviewLOD),
-                TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize)
+                TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize),
+                TextureGenerator.TextureFromColorMap(mapData.biomeControlMapA, mapChunkSize, mapChunkSize),
+                TextureGenerator.TextureFromColorMap(mapData.biomeControlMapB, mapChunkSize, mapChunkSize)
             );
         }
     }
@@ -232,9 +282,223 @@ public class MapGenerator : MonoBehaviour
             normalizeMode
         );
 
-        Color[] colorMap = CombineMaps(heightMap, temperatureMap, moistureMap);
+        GenerateTextureMaps(heightMap, temperatureMap, moistureMap, centre, out Color[] colorMap, out Color[] biomeControlMapA, out Color[] biomeControlMapB);
 
-        return new MapData(heightMap, temperatureMap, moistureMap, colorMap);
+        return new MapData(heightMap, temperatureMap, moistureMap, colorMap, biomeControlMapA, biomeControlMapB);
+    }
+
+    void GenerateTextureMaps(float[,] heightMap, float[,] temperatureMap, float[,] moistureMap, Vector2 centre, out Color[] colorMap, out Color[] biomeControlMapA, out Color[] biomeControlMapB)
+    {
+        colorMap = CombineMaps(heightMap, temperatureMap, moistureMap);
+        biomeControlMapA = new Color[mapChunkSize * mapChunkSize];
+        biomeControlMapB = new Color[mapChunkSize * mapChunkSize];
+
+        float halfSize = (mapChunkSize - 1) / 2f;
+
+        for (int y = 0; y < mapChunkSize; y++)
+        {
+            for (int x = 0; x < mapChunkSize; x++)
+            {
+                float worldX = centre.x + x - halfSize;
+                float worldZ = centre.y + halfSize - y;
+                float currentHeight = heightMap[x, y];
+                float currentTemperature = temperatureMap[x, y];
+                float currentMoisture = moistureMap[x, y];
+
+                float[] weights = GetBiomeTextureWeights(currentHeight, currentTemperature, currentMoisture, worldX, worldZ);
+                int index = y * mapChunkSize + x;
+
+                biomeControlMapA[index] = new Color(weights[0], weights[1], weights[2], weights[3]);
+                biomeControlMapB[index] = new Color(weights[4], weights[5], weights[6], 0f);
+            }
+        }
+    }
+
+    float[] GetBiomeTextureWeights(float currentHeight, float currentTemperature, float currentMoisture, float worldX, float worldZ)
+    {
+        float[] weights = new float[7];
+
+        int selectedBiomeIndex = GetBiomeIndex(currentHeight, currentTemperature, currentMoisture);
+        BiomeTextureType selectedType = ResolveBiomeTextureType(biomes[selectedBiomeIndex]);
+
+        if (selectedType == BiomeTextureType.Water)
+        {
+            weights[0] = 1f;
+            return weights;
+        }
+
+        float boundaryNoiseScale = Mathf.Max(0.0001f, biomeBoundaryNoiseScale);
+        float boundaryNoise = Mathf.PerlinNoise(
+            (worldX + biomeBlendNoiseOffset.x) / boundaryNoiseScale,
+            (worldZ + biomeBlendNoiseOffset.y) / boundaryNoiseScale
+        );
+
+        float noisyHeight = Mathf.Clamp01(currentHeight + (boundaryNoise - 0.5f) * biomeBoundaryNoiseHeightInfluence * 2f);
+        float softness = Mathf.Max(0.0001f, biomeBlendSoftness);
+        float totalWeight = 0f;
+
+        for (int i = 0; i < biomes.Length; i++)
+        {
+            BiomeTextureType type = ResolveBiomeTextureType(biomes[i]);
+
+            if (type == BiomeTextureType.Auto || type == BiomeTextureType.Water)
+            {
+                continue;
+            }
+
+            int weightIndex = GetTextureWeightIndex(type);
+
+            if (weightIndex < 0 || weightIndex >= weights.Length)
+            {
+                continue;
+            }
+
+            BiomeType biome = biomes[i];
+            float heightWeight = SmoothRangeWeight(noisyHeight, biome.minHeight, biome.maxHeight, softness);
+            float temperatureWeight = SmoothRangeWeight(currentTemperature, biome.minTemperature, biome.maxTemperature, softness);
+            float moistureWeight = SmoothRangeWeight(currentMoisture, biome.minMoisture, biome.maxMoisture, softness);
+            float weight = heightWeight * temperatureWeight * moistureWeight;
+
+            float patchNoiseScale = Mathf.Max(0.0001f, biomePatchNoiseScale);
+            float patchNoise = Mathf.PerlinNoise(
+                (worldX + biomeBlendNoiseOffset.x + i * 37.19f) / patchNoiseScale,
+                (worldZ + biomeBlendNoiseOffset.y + i * 71.43f) / patchNoiseScale
+            );
+
+            weight *= Mathf.Lerp(1f, Mathf.Lerp(0.65f, 1.35f, patchNoise), biomePatchNoiseStrength);
+            weights[weightIndex] += weight;
+            totalWeight += weight;
+        }
+
+        if (totalWeight <= 0.0001f)
+        {
+            int fallbackIndex = GetTextureWeightIndex(selectedType);
+            if (fallbackIndex < 0)
+            {
+                fallbackIndex = 2;
+            }
+            weights[fallbackIndex] = 1f;
+            totalWeight = 1f;
+        }
+        else
+        {
+            for (int i = 0; i < weights.Length; i++)
+            {
+                weights[i] /= totalWeight;
+            }
+        }
+
+        float snowAmount = GetSnowAmount(currentHeight, worldX, worldZ);
+
+        if (snowAmount > 0f)
+        {
+            for (int i = 1; i < weights.Length; i++)
+            {
+                if (i == 6)
+                {
+                    continue;
+                }
+
+                weights[i] *= 1f - snowAmount;
+            }
+
+            weights[6] = Mathf.Max(weights[6], snowAmount);
+        }
+
+        NormalizeWeights(weights);
+        return weights;
+    }
+
+    float GetSnowAmount(float currentHeight, float worldX, float worldZ)
+    {
+        if (!useSnowMask)
+        {
+            return 0f;
+        }
+
+        float startHeight = Mathf.Min(snowStartHeight, snowEndHeight);
+        float endHeight = Mathf.Max(snowStartHeight, snowEndHeight);
+        float transitionSize = Mathf.Max(0.0001f, endHeight - startHeight);
+
+        float lineScale = Mathf.Max(0.0001f, snowLineNoiseScale);
+        float lineNoise = Mathf.PerlinNoise(
+            (worldX + snowNoiseOffset.x) / lineScale,
+            (worldZ + snowNoiseOffset.y) / lineScale
+        );
+
+        float localSnowStart = startHeight + (lineNoise - 0.5f) * snowLineNoiseHeightInfluence * 2f;
+        float snowAmount = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(localSnowStart, localSnowStart + transitionSize, currentHeight));
+
+        float holeScale = Mathf.Max(0.0001f, snowHoleNoiseScale);
+        float holeNoise = Mathf.PerlinNoise(
+            (worldX + snowNoiseOffset.x + 913.2f) / holeScale,
+            (worldZ + snowNoiseOffset.y + 281.7f) / holeScale
+        );
+
+        float holeAmount = Mathf.SmoothStep(snowHoleThreshold, 1f, holeNoise) * snowHoleStrength;
+        snowAmount = Mathf.Clamp01(snowAmount - holeAmount * (1f - Mathf.SmoothStep(endHeight, 1f, currentHeight)));
+
+        return snowAmount;
+    }
+
+    float SmoothRangeWeight(float value, float min, float max, float softness)
+    {
+        float insideFromMin = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(min - softness, min + softness, value));
+        float insideFromMax = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(max - softness, max + softness, value));
+        return Mathf.Clamp01(insideFromMin * insideFromMax);
+    }
+
+    void NormalizeWeights(float[] weights)
+    {
+        float total = 0f;
+
+        for (int i = 0; i < weights.Length; i++)
+        {
+            total += weights[i];
+        }
+
+        if (total <= 0.0001f)
+        {
+            weights[2] = 1f;
+            return;
+        }
+
+        for (int i = 0; i < weights.Length; i++)
+        {
+            weights[i] /= total;
+        }
+    }
+
+    int GetTextureWeightIndex(BiomeTextureType type)
+    {
+        if (type == BiomeTextureType.Water) return 0;
+        if (type == BiomeTextureType.Beach) return 1;
+        if (type == BiomeTextureType.Plains) return 2;
+        if (type == BiomeTextureType.Forest) return 3;
+        if (type == BiomeTextureType.Desert) return 4;
+        if (type == BiomeTextureType.Mountain) return 5;
+        if (type == BiomeTextureType.Snow) return 6;
+        return -1;
+    }
+
+    BiomeTextureType ResolveBiomeTextureType(BiomeType biome)
+    {
+        if (biome.textureType != BiomeTextureType.Auto)
+        {
+            return biome.textureType;
+        }
+
+        string biomeName = string.IsNullOrWhiteSpace(biome.name) ? string.Empty : biome.name.ToLowerInvariant();
+
+        if (biomeName.Contains("water") || biomeName.Contains("ocean") || biomeName.Contains("sea") || biomeName.Contains("lake")) return BiomeTextureType.Water;
+        if (biomeName.Contains("beach") || biomeName.Contains("sand shore") || biomeName.Contains("shore")) return BiomeTextureType.Beach;
+        if (biomeName.Contains("plain") || biomeName.Contains("grass") || biomeName.Contains("field")) return BiomeTextureType.Plains;
+        if (biomeName.Contains("forest") || biomeName.Contains("woods")) return BiomeTextureType.Forest;
+        if (biomeName.Contains("desert") || biomeName.Contains("dune")) return BiomeTextureType.Desert;
+        if (biomeName.Contains("mountain") || biomeName.Contains("rock")) return BiomeTextureType.Mountain;
+        if (biomeName.Contains("snow") || biomeName.Contains("ice")) return BiomeTextureType.Snow;
+
+        return BiomeTextureType.Plains;
     }
 
     public Color[] CombineMaps(float[,] heightMap, float[,] temperatureMap, float[,] moistureMap)
@@ -642,6 +906,16 @@ public class MapGenerator : MonoBehaviour
 
         biomeColorSmoothRadius = Mathf.Max(0, biomeColorSmoothRadius);
         biomeColorSmoothStrength = Mathf.Clamp01(biomeColorSmoothStrength);
+        biomeBlendSoftness = Mathf.Clamp(biomeBlendSoftness, 0f, 0.5f);
+        biomeBoundaryNoiseScale = Mathf.Max(0.0001f, biomeBoundaryNoiseScale);
+        biomeBoundaryNoiseHeightInfluence = Mathf.Clamp(biomeBoundaryNoiseHeightInfluence, 0f, 0.25f);
+        biomePatchNoiseScale = Mathf.Max(0.0001f, biomePatchNoiseScale);
+        biomePatchNoiseStrength = Mathf.Clamp01(biomePatchNoiseStrength);
+        snowLineNoiseScale = Mathf.Max(0.0001f, snowLineNoiseScale);
+        snowLineNoiseHeightInfluence = Mathf.Clamp(snowLineNoiseHeightInfluence, 0f, 0.25f);
+        snowHoleNoiseScale = Mathf.Max(0.0001f, snowHoleNoiseScale);
+        snowHoleStrength = Mathf.Clamp01(snowHoleStrength);
+        snowHoleThreshold = Mathf.Clamp01(snowHoleThreshold);
     }
 
     struct MapThreadInfo<T>
@@ -723,10 +997,23 @@ public struct DecorationLayer
     public Vector2 noiseOffset;
 }
 
+public enum BiomeTextureType
+{
+    Auto,
+    Water,
+    Beach,
+    Plains,
+    Forest,
+    Desert,
+    Mountain,
+    Snow
+}
+
 [System.Serializable]
 public struct BiomeType
 {
     public string name;
+    public BiomeTextureType textureType;
 
     public bool allowColorBlend;
 
@@ -795,12 +1082,16 @@ public struct MapData
     public readonly float[,] temperatureMap;
     public readonly float[,] moistureMap;
     public readonly Color[] colorMap;
+    public readonly Color[] biomeControlMapA;
+    public readonly Color[] biomeControlMapB;
 
-    public MapData(float[,] heightMap, float[,] temperatureMap, float[,] moistureMap, Color[] colorMap)
+    public MapData(float[,] heightMap, float[,] temperatureMap, float[,] moistureMap, Color[] colorMap, Color[] biomeControlMapA, Color[] biomeControlMapB)
     {
         this.heightMap = heightMap;
         this.temperatureMap = temperatureMap;
         this.moistureMap = moistureMap;
         this.colorMap = colorMap;
+        this.biomeControlMapA = biomeControlMapA;
+        this.biomeControlMapB = biomeControlMapB;
     }
 }
