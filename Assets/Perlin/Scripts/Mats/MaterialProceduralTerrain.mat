@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: urp
-  m_Shader: {fileID: 4800000, guid: d3844060c592c1942995b927bb215c2a, type: 3}
+  m_Name: MaterialProceduralTerrain
+  m_Shader: {fileID: 4800000, guid: 0c282c42d31d81e499bebda7a66bc91a, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -28,8 +28,16 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _BeachNormal:
+        m_Texture: {fileID: 2800000, guid: 14dab577eea927a43bc3dd4131089312, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BeachSpecular:
+        m_Texture: {fileID: 2800000, guid: 89101dc700039b842bba61c2b4376af9, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _BeachTex:
-        m_Texture: {fileID: 2800000, guid: 98eb0163a8a6dca48870b0c9bfd220f6, type: 3}
+        m_Texture: {fileID: 2800000, guid: 7c61c5b95e07eea4e82b324a3b83e838, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BlendMap:
@@ -41,19 +49,27 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ColorMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 96bcba3c53f07a6468309a2cc8120132, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ControlMapA:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 96bcba3c53f07a6468309a2cc8120132, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ControlMapB:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 96bcba3c53f07a6468309a2cc8120132, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DesertNormal:
+        m_Texture: {fileID: 2800000, guid: ed65f44110c10a84abfaabea9d3cab2b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DesertSpecular:
+        m_Texture: {fileID: 2800000, guid: 6155a7c71afe0ef4f99b8eb592627e12, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DesertTex:
-        m_Texture: {fileID: 2800000, guid: 1230f3646ee5f204f8ac8510f23674f0, type: 3}
+        m_Texture: {fileID: 2800000, guid: b47645ec735cee74b8dc287ec132889b, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
@@ -72,8 +88,16 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ForestNormal:
+        m_Texture: {fileID: 2800000, guid: cb39bd4bc91c216419ef2e6dc2afae0c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ForestSpecular:
+        m_Texture: {fileID: 2800000, guid: c10418a65c9c0bd49a7d940e44e4be84, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _ForestTex:
-        m_Texture: {fileID: 2800000, guid: c4ae474a024ca0440a0ae09cc92a77de, type: 3}
+        m_Texture: {fileID: 2800000, guid: db168e2aa82b2d74187069d61792e568, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -84,8 +108,16 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _MountainNormal:
+        m_Texture: {fileID: 2800000, guid: 0cc1f3f3813e841468c590bb0a716d1b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MountainSpecular:
+        m_Texture: {fileID: 2800000, guid: 6b2fdfa829374314a9ad310d564dc289, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MountainTex:
-        m_Texture: {fileID: 2800000, guid: b72fef706a5d01a4fb6df984ef072f76, type: 3}
+        m_Texture: {fileID: 2800000, guid: f0158c9b9c1a613408ad9349d2b40d4a, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
@@ -96,20 +128,44 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _PlainsNormal:
+        m_Texture: {fileID: 2800000, guid: 64a668b993f05a44d81dad3299580617, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _PlainsSpecular:
+        m_Texture: {fileID: 2800000, guid: 6ee093493cd3a0646899bd0689c96e69, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _PlainsTex:
-        m_Texture: {fileID: 2800000, guid: 96d8a51ed4130a2458d6ba9114c0d084, type: 3}
+        m_Texture: {fileID: 2800000, guid: 8d38408652a91a549ad06164ec9f74ca, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SnowNormal:
+        m_Texture: {fileID: 2800000, guid: 80c909f0cfd440c4685fb9820c2c88c4, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SnowSpecular:
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SnowTex:
-        m_Texture: {fileID: 2800000, guid: 49238d104f1ed6a4f8ce89c0af8f4e99, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SpecGlossMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _WaterNormal:
+        m_Texture: {fileID: 2800000, guid: 4eb970ceaacb7154f9d9c3ef26596dd4, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _WaterSpecular:
+        m_Texture: {fileID: 2800000, guid: a727a2cb790cd24498cf210ad4e87d29, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _WaterTex:
-        m_Texture: {fileID: 2800000, guid: 96bcba3c53f07a6468309a2cc8120132, type: 3}
+        m_Texture: {fileID: 2800000, guid: 4c6e4837b1a6e7644b98249eb03e3dc4, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
@@ -129,6 +185,7 @@ Material:
     - _AddPrecomputedVelocity: 0
     - _AlphaClip: 0
     - _AlphaToMask: 0
+    - _AmbientStrength: 0.28
     - _BeachScale: 0.18
     - _BiomeColorStrength: 1
     - _BiomeDetailScale: 0.16
@@ -158,6 +215,7 @@ Material:
     - _GlossyReflections: 0
     - _Metallic: 0
     - _MountainScale: 0.14
+    - _NormalStrength: 1
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _PatternScale: 0.08
@@ -171,6 +229,7 @@ Material:
     - _SnowDetailStrength: 0.22
     - _SnowScale: 0.16
     - _SpecularHighlights: 1
+    - _SpecularStrength: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _Surface: 0
@@ -184,24 +243,24 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _BeachTint: {r: 0.82, g: 0.72, b: 0.47999996, a: 1}
+    - _BeachTint: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _DesertTint: {r: 0.78, g: 0.56, b: 0.27999997, a: 1}
+    - _DesertTint: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _ForestTint: {r: 0.12999997, g: 0.33999997, b: 0.15999997, a: 1}
+    - _ForestTint: {r: 1, g: 1, b: 1, a: 1}
     - _GrassColorA: {r: 0.21999997, g: 0.41999996, b: 0.11999995, a: 1}
     - _GrassColorB: {r: 0.09999997, g: 0.24999997, b: 0.06999998, a: 1}
-    - _MountainTint: {r: 0.41999996, g: 0.38999996, b: 0.34999996, a: 1}
-    - _PlainsTint: {r: 0.34999996, g: 0.62, b: 0.24999997, a: 1}
+    - _MountainTint: {r: 1, g: 1, b: 1, a: 1}
+    - _PlainsTint: {r: 1, g: 1, b: 1, a: 1}
     - _RockColorA: {r: 0.34999996, g: 0.33999997, b: 0.31999996, a: 1}
     - _RockColorB: {r: 0.17999998, g: 0.17999998, b: 0.16999996, a: 1}
     - _SandColorA: {r: 0.72, g: 0.6, b: 0.37999994, a: 1}
     - _SandColorB: {r: 0.47999996, g: 0.37999994, b: 0.22999996, a: 1}
     - _SnowColorA: {r: 0.95, g: 0.96999997, b: 1, a: 1}
     - _SnowColorB: {r: 0.68, g: 0.78, b: 0.88, a: 1}
-    - _SnowTint: {r: 0.94, g: 0.96, b: 1, a: 1}
+    - _SnowTint: {r: 1, g: 1, b: 1, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
-    - _WaterTint: {r: 0.09999997, g: 0.45, b: 0.75, a: 1}
+    - _WaterTint: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &693599865242830983
