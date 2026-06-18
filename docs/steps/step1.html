@@ -1,233 +1,67 @@
 <details class="step-wrapper" open>
-  <summary class="step-summary">Step 1: Perlin Noise</summary>
-
-  <div class="step-card">
-    <h3>Goal of This Step</h3>
-
-    <p>
-      The first step in this project is to establish a foundation for procedural
-      terrain generation. Before terrain can be shaped, colored, or turned into
-      a 3D world, a structured source of data is needed. This step focuses on
-      generating that data using Perlin noise.
+  <summary class="step-summary">Step 1: Perlin noise as continuous terrain data</summary>
+  <article class="step-card">
+    <p class="section-kicker">Foundation</p>
+    <p class="lead">
+      The first requirement is not a mountain or a biome. It is a stable field of values in which
+      neighbouring coordinates change gradually. Unity's <code>Mathf.PerlinNoise</code> provides that foundation.
     </p>
 
+    <h3>Why coherent noise is used</h3>
     <p>
-      This step mainly addresses <strong>sub question 1</strong>: what Perlin
-      noise is, and how parameters such as scale influence the generated result.
-      The other parameters, such as octaves, persistence, and lacunarity, are
-      introduced more fully in the next step.
+      Independent random values create disconnected spikes. Coherent noise creates related values across space,
+      so the map can be interpreted as continuous height. A seed and coordinate offset make the result repeatable:
+      the same inputs produce the same world.
     </p>
 
-    <h3>Why Perlin Noise Was Chosen</h3>
+    <h3>Core Unity logic</h3>
+    <div class="code-block"><pre><code>float sampleX = (x - halfWidth + octaveOffsets[i].x) / scale * frequency;
+float sampleY = (y - halfHeight + octaveOffsets[i].y) / scale * frequency;
+
+float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2f - 1f;
+noiseHeight += perlinValue * amplitude;</code></pre></div>
 
     <p>
-      A procedural terrain system needs values that feel natural and connected.
-      Using completely random numbers for each position would produce harsh and
-      chaotic transitions, which makes the result difficult to interpret as
-      terrain. Mountains, oceans, and plains would appear as disconnected
-      fragments instead of continuous shapes.
-    </p>
-
-    <p>
-      Perlin noise is more suitable because nearby positions tend to produce
-      similar values. This creates gradual transitions instead of abrupt jumps.
-      For terrain generation, this is important because height should usually
-      change smoothly across the world rather than randomly from one tile to the
-      next.
-    </p>
-
-    <p>
-      Other methods could also be considered. Pure random generation is simple,
-      but it does not create believable terrain. Cellular automata can produce
-      interesting organic patterns, but they are generally more suitable for
-      structures such as caves or local map evolution than for broad continuous
-      terrain. Perlin noise was chosen here because it offers a strong balance
-      between control, readability, and natural-looking variation.
-    </p>
-
-    <h3>What Perlin Noise Does</h3>
-
-    <p>
-      Perlin noise generates smooth numerical variation across a 2D space. Each
-      position on the map receives a value, and positions that are close
-      together tend to have related values. Instead of each point behaving
-      independently, the values blend into one another.
-    </p>
-
-    <p>
-      In this project, these values are first interpreted as height data. At
-      this stage, they are not yet terrain types or biomes, but they already
-      form the raw structure that later steps will build on.
-    </p>
-
-    <h3>How Scale Influences the Result</h3>
-
-    <p>
-      The most important parameter in this first version is
-      <strong>scale</strong>. Scale determines how stretched or compressed the
-      noise pattern is.
-    </p>
-
-    <p>
-      A small scale results in more rapid variation, which makes the map look
-      more detailed and busy. A large scale stretches the noise over a bigger
-      area, which produces broader and smoother shapes. Because of this, scale
-      already has a large impact on whether the result feels rough, soft,
-      zoomed-in, or zoomed-out.
-    </p>
-
-    <p>
-      The <strong>seed</strong> is also included in the demo. The seed does not
-      change how the system works, but it changes which pattern is generated. In
-      other words, scale changes the character of the map, while seed changes
-      the specific variation.
-    </p>
-
-    <h3>How This Works in Unity</h3>
-
-    <p>
-      In Unity, this starts with generating a value for each position in a 2D
-      grid. The code below shows the full noise generation method used in the
-      project. Even though this version already contains additional parameters
-      for later expansion, the core idea is still the same: loop through the map
-      and calculate a noise value for each coordinate.
-    </p>
-
-    <div class="code-block">
-      <pre><code>public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, int seed, float scale, int octaves, float persistance, float lacunarity, Vector2 offset)
-{
-    float[,] noiseMap = new float[mapWidth, mapHeight];
-
-    System.Random prng = new System.Random(seed);
-    Vector2[] octaveOffsets = new Vector2[octaves];
-
-    float amplitude = 1;
-    float frequency = 1;
-
-    for (int i = 0; i < octaves; i++)
-    {
-        float offsetX = prng.Next(-100000, 100000) + offset.x;
-        float offsetY = prng.Next(-100000, 100000) - offset.y;
-        octaveOffsets[i] = new Vector2(offsetX, offsetY);
-
-        amplitude *= persistance;
-    }
-
-    if (scale <= 0)
-    {
-        scale = 0.0001f;
-    }
-
-    float halfWidth = mapWidth / 2f;
-    float halfHeight = mapHeight / 2f;
-
-    for (int y = 0; y < mapHeight; y++)
-    {
-        for (int x = 0; x < mapWidth; x++)
-        {
-            amplitude = 1;
-            frequency = 1;
-            float noiseHeight = 0;
-
-            for (int i = 0; i < octaves; i++)
-            {
-                float sampleX = (x - halfWidth + octaveOffsets[i].x) / scale * frequency;
-                float sampleY = (y - halfHeight + octaveOffsets[i].y) / scale * frequency;
-
-                float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
-                noiseHeight += perlinValue * amplitude;
-
-                amplitude *= persistance;
-                frequency *= lacunarity;
-            }
-
-            noiseMap[x, y] = noiseHeight;
-        }
-    }
-
-    return noiseMap;
-}</code></pre>
-    </div>
-
-    <h3>What This Code Does</h3>
-
-    <p>
-      The method creates a two-dimensional array and fills it with noise values.
-      For every x and y position, the code calculates a sample position and uses
-      Unity’s <code>Mathf.PerlinNoise</code> to retrieve a smooth value. That
-      value is then stored in the map.
-    </p>
-
-    <p>
-      The most important lines for this step are the sample coordinates:
-    </p>
-
-    <div class="code-block">
-      <pre><code>float sampleX = (x - halfWidth + octaveOffsets[i].x) / scale * frequency;
-float sampleY = (y - halfHeight + octaveOffsets[i].y) / scale * frequency;</code></pre>
-    </div>
-
-    <p>
-      These lines determine where the noise function is sampled. The scale value
-      directly affects these coordinates, which is why changing the scale has
-      such a visible effect on the result.
-    </p>
-
-    <p>
-      Although the code already contains octaves, persistence, and lacunarity,
-      this first step mainly focuses on the basic idea: one procedural function
-      can be sampled across a grid to produce structured terrain data.
-    </p>
-
-    <h3>Interactive Demo</h3>
-
-    <p>
-      The demo below shows the most basic form of this idea. By changing the
-      scale and seed, the effect of Perlin noise becomes directly visible. This
-      helps answer the first sub question by showing how even a simple noise
-      setup already produces structured variation instead of random chaos.
+      The coordinates are divided by <code>scale</code>. A small scale moves through noise space quickly and produces
+      compact features. A large scale stretches the pattern into broad regions. The result is converted from
+      approximately 0–1 to -1–1 before the octave amplitude is applied.
     </p>
 
     <details class="demo-wrapper" open>
-      <summary class="demo-summary">Show demo</summary>
-
+      <summary class="demo-summary">Interactive basic noise demo</summary>
       <div class="demo-content">
         <div class="demo-layout">
           <div class="controls">
-            <label>Noise Scale: <span id="scaleValue">40</span></label>
-            <input id="noiseScale" type="range" min="5" max="200" value="40" />
-
-            <label>Seed: <span id="seedValue">0</span></label>
-            <input id="noiseSeed" type="range" min="0" max="100" value="0" />
-
-            <button id="generateNoiseButton">Generate Map</button>
+            <div class="control-row">
+              <label for="noiseScale">Noise scale <span id="scaleValue" class="control-value">40</span></label>
+              <input id="noiseScale" type="range" min="5" max="200" value="40">
+            </div>
+            <div class="control-row">
+              <label for="noiseSeed">Seed <span id="seedValue" class="control-value">0</span></label>
+              <input id="noiseSeed" type="range" min="0" max="100" value="0">
+            </div>
+            <button id="generateNoiseButton" type="button">Generate another map</button>
+            <p class="preview-caption">The demo uses one octave so the effect of scale remains easy to see.</p>
           </div>
-
           <div class="preview">
-            <canvas id="noiseCanvas" width="200" height="200"></canvas>
+            <canvas id="noiseCanvas" class="demo-canvas" width="320" height="320" aria-label="Basic Perlin noise preview"></canvas>
           </div>
         </div>
       </div>
     </details>
 
-    <h3>What This Step Adds to the System</h3>
+    <h3>Design choice</h3>
+    <div class="callout">
+      <strong>Perlin noise is a source, not a biome system.</strong>
+      The noise only supplies continuous values. Meaning is added later by normalization, climate maps,
+      biome rules, control maps and the shader.
+    </div>
 
-    <p>
-      This step provides the core data source for the rest of the project.
-      Without a structured height map, later steps such as terrain thresholds,
-      biome generation, and mesh creation would not be possible.
-    </p>
-
-    <p>
-      It also shows why Perlin noise is a useful starting point for procedural
-      terrain. It creates smooth, controllable variation and forms a better
-      foundation for large landscapes than purely random generation.
-    </p>
-
-    <p>
-      In the next step, the system is expanded by looking at how additional
-      parameters such as octaves, persistence, and lacunarity influence the
-      result, making the terrain more detailed and flexible.
-    </p>
-  </div>
+    <h3>Why Perlin noise was chosen</h3>
+    <div class="evaluation-grid">
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with random values</p><h4>It creates continuous terrain</h4><p>Independent random values would create disconnected spikes. Perlin noise keeps neighbouring samples related, which is exactly what a height field needs.</p></section>
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with a hand-authored heightmap</p><h4>It supports repeatable endless generation</h4><p>A fixed seed and world coordinates reproduce the same result anywhere, so chunks can be generated when needed without storing one enormous image.</p></section>
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with a physical terrain simulation</p><h4>It is lightweight and easy to control</h4><p>Erosion or geological simulation can create more realistic formations, but Perlin noise is faster, simpler to expose in the Inspector and sufficient for the stylised world this project needs.</p></section>
+    </div>
+  </article>
 </details>

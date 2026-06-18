@@ -1,220 +1,95 @@
 <details class="step-wrapper" open>
-  <summary class="step-summary">Step 8: Multithreading</summary>
-
-  <div class="step-card">
-    <h3>Goal of This Step</h3>
-
-    <p>
-      The previous step introduced several techniques for improving the
-      performance of procedural generation in Unity. One of the most important
-      of these is multithreading. This step continues answering
-      <strong>sub question 4</strong> by explaining how multithreading can be
-      used to reduce frame drops and make real-time generation more practical.
+  <summary class="step-summary">Step 8: Procedural snow and biome decorations</summary>
+  <article class="step-card">
+    <p class="section-kicker">Surface variation</p>
+    <p class="lead">
+      The system adds variation after the base biome weights are calculated. Snow receives its own procedural mask,
+      and decoration layers turn biome data into deterministic spawn instructions.
     </p>
 
-    <h3>Why Multithreading Was Relevant in This Project</h3>
-
+    <h3>Why the snow line is irregular</h3>
     <p>
-      In this project, one of the clearest performance problems was the sudden
-      lag that occurred when large amounts of generation work happened at once.
-      A major example of this was decoration spawning. When too much work was
-      performed in a single frame, Unity stalled visibly.
+      A pure height threshold would create a perfectly horizontal border. The current mask samples low-frequency
+      noise and uses it to move the local snow start height up or down. A second noise field subtracts holes from the
+      transition, while the highest terrain gradually becomes fully covered again.
     </p>
 
+    <div class="code-block"><pre><code>float localStart = start
+    + (lineNoise - 0.5f) * snowLineNoiseHeightInfluence * 2f;
+
+float amount = Mathf.SmoothStep(
+    0f,
+    1f,
+    Mathf.InverseLerp(localStart, localStart + transition, height)
+);
+
+return Mathf.Clamp01(
+    amount - holeAmount * (1f - Mathf.SmoothStep(end, 1f, height))
+);</code></pre></div>
+
+    <details class="demo-wrapper" open>
+      <summary class="demo-summary">Interactive snow-mask demo</summary>
+      <div class="demo-content">
+        <div class="demo-layout">
+          <div class="controls">
+            <div class="control-row">
+              <label for="snowStart8">Snow start <span id="snowStart8Value" class="control-value">0.75</span></label>
+              <input id="snowStart8" type="range" min="0.45" max="0.9" step="0.01" value="0.75">
+            </div>
+            <div class="control-row">
+              <label for="snowEnd8">Full snow <span id="snowEnd8Value" class="control-value">0.85</span></label>
+              <input id="snowEnd8" type="range" min="0.55" max="1" step="0.01" value="0.85">
+            </div>
+            <div class="control-row">
+              <label for="lineInfluence8">Line variation <span id="lineInfluence8Value" class="control-value">0.08</span></label>
+              <input id="lineInfluence8" type="range" min="0" max="0.2" step="0.01" value="0.08">
+            </div>
+            <div class="control-row">
+              <label for="holeStrength8">Hole strength <span id="holeStrength8Value" class="control-value">0.25</span></label>
+              <input id="holeStrength8" type="range" min="0" max="0.8" step="0.05" value="0.25">
+            </div>
+          </div>
+          <div class="preview">
+            <canvas id="snowCanvas8" class="demo-canvas" width="360" height="360" aria-label="Procedural snow mask preview"></canvas>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <h3>Decoration layers</h3>
     <p>
-      Because of this, it became necessary to move as much heavy calculation as
-      possible away from the main thread. Multithreading was a suitable choice
-      because much of procedural generation is based on data processing rather
-      than direct interaction with Unity scene objects.
+      Each biome can contain one or more decoration layers. A layer defines available prefabs, spawn chance, noise
+      threshold, spacing, sampling interval, random offset and random scale. The generator does not instantiate objects
+      in the background thread. It only creates plain <code>DecorationSpawnData</code> records.
     </p>
 
-    <h3>Main Thread and Worker Threads</h3>
-
-    <p>
-      Unity uses a main thread for most engine-related tasks, including
-      rendering, physics, and object creation. If too much work is done on this
-      thread, the frame rate drops and the game can start to stutter.
-    </p>
-
-    <p>
-      Multithreading introduces additional worker threads that can perform
-      calculations separately from the main thread. This makes it possible to
-      prepare data in the background while the main thread remains focused on
-      running the game.
-    </p>
-
-    <h3>What Can and Cannot Run on a Thread</h3>
-
-    <p>
-      Not every part of a Unity project can safely run on a worker thread. The
-      main rule is that calculations based only on data can usually be moved to
-      another thread, while anything that directly uses Unity objects must stay
-      on the main thread.
-    </p>
-
-    <p>
-      In this project, the following kinds of work are suitable for worker
-      threads:
-    </p>
-
-    <p>
-      - generating noise maps<br />
-      - calculating biome data<br />
-      - preparing mesh data such as vertices and triangles<br />
-      - preparing decoration spawn data
-    </p>
-
-    <p>
-      The following kinds of work must remain on the main thread:
-    </p>
-
-    <p>
-      - creating or destroying GameObjects<br />
-      - modifying transforms<br />
-      - assigning meshes, textures, or materials<br />
-      - interacting directly with Unity components
-    </p>
-
-    <p>
-      This distinction is important because multithreading is not a universal
-      solution. It can reduce the cost of calculation, but Unity-specific work
-      still has to be applied safely on the main thread.
-    </p>
-
-    <h3>How Multithreading Is Used in the Project</h3>
-
-    <p>
-      In the project, map generation is requested from the main thread, but the
-      actual calculation is performed on a worker thread. This means the heavy
-      data generation does not immediately block the frame.
-    </p>
-
-    <div class="code-block">
-      <pre><code>public void RequestMapData(Vector2 centre, Action<MapData> callback)
-{
-    ThreadStart threadStart = delegate
-    {
-        MapDataThread(centre, callback);
-    };
-
-    new Thread(threadStart).Start();
-}</code></pre>
+    <div class="pipeline-grid">
+      <section class="pipeline-card"><h4>1. Select biome</h4><p>Read height, temperature and moisture at the sampled tile.</p></section>
+      <section class="pipeline-card"><h4>2. Test layer</h4><p>Apply sample interval, noise threshold, chance and minimum distance.</p></section>
+      <section class="pipeline-card"><h4>3. Store data</h4><p>Save prefab index, local position, rotation, scale and height value.</p></section>
+      <section class="pipeline-card"><h4>4. Instantiate later</h4><p><code>EndlessTerrain</code> spawns a limited number of GameObjects per frame.</p></section>
     </div>
 
+    <h3>Why spawning is deterministic</h3>
     <p>
-      This method creates a new thread and starts the background generation
-      process. The data itself is then calculated separately from the main Unity
-      loop.
+      The random generator is seeded from the world seed, chunk position, tile coordinates and layer index. A chunk
+      therefore produces the same decoration layout each time it is generated, while still appearing random.
     </p>
 
-    <div class="code-block">
-      <pre><code>void MapDataThread(Vector2 centre, Action<MapData> callback)
-{
-    MapData mapData = GenerateMapData(centre);
-
-    lock (mapDataThreadInfoQueue)
-    {
-        mapDataThreadInfoQueue.Enqueue(
-            new MapThreadInfo&lt;MapData&gt;(callback, mapData)
-        );
-    }
-}</code></pre>
+    <div class="project-image" data-src="images/decorations-biome-example.png" data-alt="Biome-specific trees rocks and grass on generated terrain">
+      <div class="image-placeholder">
+        <span>Recommended decoration image</span>
+        <strong>images/decorations-biome-example.png</strong>
+        <small>Show objects changing across a biome boundary.</small>
+      </div>
     </div>
 
-    <h3>Why a Queue Is Needed</h3>
-
-    <p>
-      Once the worker thread finishes its calculation, the result cannot simply
-      be applied directly to the scene. Unity objects must still be updated on
-      the main thread. Because of this, the generated data is placed into a
-      queue.
-    </p>
-
-    <p>
-      The queue acts as a safe handoff between the worker thread and the main
-      thread. The background thread calculates the result, and the main thread
-      later retrieves it and applies it when it is safe to do so.
-    </p>
-
-    <div class="code-block">
-      <pre><code>void Update()
-{
-    lock (mapDataThreadInfoQueue)
-    {
-        while (mapDataThreadInfoQueue.Count > 0)
-        {
-            MapThreadInfo&lt;MapData&gt; threadInfo =
-                mapDataThreadInfoQueue.Dequeue();
-
-            threadInfo.callback(threadInfo.parameter);
-        }
-    }
-}</code></pre>
+    <h3>Why these procedural systems were chosen</h3>
+    <div class="evaluation-grid">
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with one flat snow threshold</p><h4>The snow line looks organic while remaining controllable</h4><p>Line noise moves the boundary and hole noise breaks up the transition, while start and end height still give clear artistic control.</p></section>
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with a hand-painted snow mask</p><h4>The mask works across an endless seeded world</h4><p>Every chunk calculates the same result from world coordinates, so no large authored mask has to be stored or aligned.</p></section>
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with spawning objects immediately</p><h4>Decoration data and Unity object creation are separated</h4><p>Spawn decisions can be prepared in the background, while deterministic records are instantiated gradually on the main thread.</p></section>
+      <section class="evaluation-card evaluation-limit"><p class="evaluation-label">Future scale improvement</p><h4>Dense forests may benefit from pooling or GPU instancing</h4><p>The current GameObject approach is clear and suitable for the prototype. A much larger object count would justify a more specialised rendering strategy.</p></section>
     </div>
-
-    <p>
-      This structure keeps the expensive calculation separate from the Unity
-      engine operations, while still making it possible to use the generated
-      data in the scene.
-    </p>
-
-    <h3>Why This Was a Good Choice for the Project</h3>
-
-    <p>
-      Multithreading was a strong fit for this project because the system is
-      built around repeated map and biome calculations. These calculations are
-      relatively heavy, but they do not need immediate access to scene objects
-      while they are being generated.
-    </p>
-
-    <p>
-      That makes them suitable to move into the background. Instead of freezing
-      the game while chunks are prepared, the system can calculate data
-      separately and only apply the result when ready.
-    </p>
-
-    <p>
-      This is especially valuable for a reusable terrain generation tool. If the
-      system is intended to be used in larger Unity projects or even distributed
-      as an Asset Store package, it needs to remain responsive while generating
-      terrain in real time.
-    </p>
-
-    <h3>Limitations of Multithreading</h3>
-
-    <p>
-      Even though multithreading is powerful, it does not solve every
-      performance problem by itself. If too many objects still need to be
-      instantiated on the main thread, lag can still occur. In other words,
-      threading reduces the cost of preparing data, but it does not remove the
-      cost of applying that data in Unity.
-    </p>
-
-    <p>
-      Because of this, multithreading works best when combined with the
-      techniques from the previous step, such as chunking, level of detail,
-      selective spawning, and spreading work over time.
-    </p>
-
-    <h3>What This Step Adds to the System</h3>
-
-    <p>
-      This step completes the performance section of the project by showing how
-      one of the most effective optimization techniques can be applied in Unity.
-      It demonstrates that procedural generation can be made more practical by
-      separating heavy calculations from engine-side object updates.
-    </p>
-
-    <p>
-      This directly contributes to sub question 4, because it explains how
-      multithreading improves performance and why it was a suitable choice for
-      this project.
-    </p>
-
-    <p>
-      In the conclusion, the full system can now be evaluated as a whole:
-      starting from simple Perlin noise, expanding into terrain and biomes, and
-      finally being optimized into a more scalable Unity generation pipeline.
-    </p>
-  </div>
+  </article>
 </details>

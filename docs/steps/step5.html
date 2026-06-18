@@ -1,211 +1,89 @@
 <details class="step-wrapper" open>
-  <summary class="step-summary">
-    Step 5: From 2D Data to Unity World Generation
-  </summary>
-
-  <div class="step-card">
-    <h3>Goal of This Step</h3>
-
-    <p>
-      In the previous steps, Perlin noise was used to generate structured data
-      and interpret it as terrain and biomes. However, the system was still
-      limited to 2D visualizations. While useful for understanding the data, it
-      did not yet result in an actual game environment.
+  <summary class="step-summary">Step 5: Biome classification and color preview</summary>
+  <article class="step-card">
+    <p class="section-kicker">Rule-based selection</p>
+    <p class="lead">
+      A biome is selected by testing the current height, temperature and moisture against configured min/max ranges.
+      This configuration lives in the <code>BiomeType[] biomes</code> array in <code>MapGenerator</code>.
     </p>
 
-    <p>
-      This step continues answering <strong>sub question 2</strong> by showing
-      how the generated data can be applied in Unity to create a 3D world. The
-      noise maps are no longer only displayed, but used to build terrain,
-      textures, and gameplay-relevant systems.
-    </p>
-
-    <h3>Why This Step Was Needed</h3>
-
-    <p>
-      A procedural system only becomes useful in practice when it can be applied
-      inside a game engine. Up to this point, the project demonstrated how data
-      could be generated and interpreted, but it did not yet show how that data
-      could be used to construct an actual environment.
-    </p>
-
-    <p>
-      This step is important because it transforms the project from a conceptual
-      demonstration into a functional system. The same data that was previously
-      visualized in 2D is now used to generate a 3D world inside Unity.
-    </p>
-
-    <h3>Reusing the Same Data Across Systems</h3>
-
-    <p>
-      One of the key design choices in this project is that the same generated
-      data is reused across multiple systems. Instead of generating separate
-      data for each feature, the height and temperature maps act as a shared
-      foundation.
-    </p>
-
-    <p>
-      This means that a single dataset can control:
-    </p>
-
-    <p>
-      - terrain shape<br />
-      - biome colors<br />
-      - object placement<br />
-      - gameplay rules
-    </p>
-
-    <p>
-      This approach was chosen because it keeps the system consistent and makes
-      it easier to extend. Changes in the data automatically affect multiple
-      parts of the world at once.
-    </p>
-
-    <h3>From Height Map to 3D Mesh</h3>
-
-    <p>
-      To create an actual terrain, the height map is converted into a mesh. Each
-      value in the map becomes a vertex in 3D space. The x and z coordinates
-      define the position on the ground, while the y coordinate is based on the
-      height value.
-    </p>
-
-    <div class="code-block">
-      <pre><code>meshData.vertices[vertexIndex] = new Vector3(
-    topLeftX + x,
-    heightCurve.Evaluate(heightMap[x, y]) * heightMultiplier,
-    topLeftZ - y
-);</code></pre>
-    </div>
-
-    <p>
-      By connecting these vertices with triangles, Unity can render the terrain
-      as a continuous surface. This is the point where the system transitions
-      from data representation to visible geometry.
-    </p>
-
-    <h3>Applying Biome Data as Textures</h3>
-
-    <p>
-      The biome system is also applied visually. The combined height and
-      temperature data is converted into a color map, which is then used as a
-      texture on the terrain mesh.
-    </p>
-
-    <div class="code-block">
-      <pre><code>display.DrawMesh(
-    MeshGenerator.GenerateTerrainMesh(
-        mapData.heightMap,
-        meshHeightMultiplier,
-        meshHeightCurve,
-        editorPreviewLOD
-    ),
-    TextureGenerator.TextureFromColorMap(
-        mapData.colorMap,
-        mapChunkSize,
-        mapChunkSize
-    )
-);</code></pre>
-    </div>
-
-    <p>
-      This ensures that the terrain shape and its appearance are both driven by
-      the same procedural data.
-    </p>
-
-    <h3>Why Chunk-Based Generation Was Introduced</h3>
-
-    <p>
-      Generating an entire world as a single mesh would quickly become
-      impractical. As the size of the world increases, the number of vertices,
-      calculations, and memory usage grows rapidly.
-    </p>
-
-    <p>
-      To solve this, the world is divided into smaller sections called chunks.
-      Each chunk is generated independently and only when needed.
-    </p>
-
-    <div class="code-block">
-      <pre><code>terrainChunkDictionary.Add(
-    viewedChunkCoord,
-    new TerrainChunk(
-        viewedChunkCoord,
-        chunkSize,
-        detailLevels,
-        transform,
-        mapMaterial
-    )
-);</code></pre>
-    </div>
-
-    <p>
-      This approach allows the world to feel continuous while internally being
-      built out of manageable pieces. It also prepares the system for real-time
-      generation, where new chunks can be created as the player moves.
-    </p>
-
-    <h3>Object Placement Based on Biomes</h3>
-
-    <p>
-      The generated biome data is also used for object placement. Instead of
-      placing objects randomly, the system first determines which biome is
-      present at a position, and then decides what can spawn there.
-    </p>
-
-    <div class="code-block">
-      <pre><code>BiomeType biome = GetBiome(currentHeight, currentTemperature);
-
-if (biome.decorationLayers == null || layerIndex >= biome.decorationLayers.Length)
+    <h3>Biome data model</h3>
+    <div class="code-block"><pre><code>public struct BiomeType
 {
-    continue;
-}</code></pre>
+    public string name;
+    public BiomeTextureType textureType;
+    public bool allowColorBlend;
+    public float minHeight;
+    public float maxHeight;
+    public float minTemperature;
+    public float maxTemperature;
+    public float minMoisture;
+    public float maxMoisture;
+    public int priority;
+    public Color color;
+    public DecorationLayer[] decorationLayers;
+}</code></pre></div>
+
+    <h3>Selection order</h3>
+    <ol class="clean-list">
+      <li>Test every biome against all three value ranges.</li>
+      <li>When ranges overlap, select the matching biome with the highest priority.</li>
+      <li>When no range matches exactly, select the biome with the smallest total distance to its ranges.</li>
+      <li>Use the selected biome color for editor previews and its texture type for shader weights.</li>
+    </ol>
+
+    <p>
+      The fallback prevents unconfigured gaps from turning magenta or leaving pixels without a biome. Priority makes
+      deliberate overlaps possible, for example a narrow beach biome taking precedence over a broader plains range.
+    </p>
+
+    <details class="demo-wrapper" open>
+      <summary class="demo-summary">Interactive biome selector</summary>
+      <div class="demo-content">
+        <div class="demo-layout">
+          <div class="controls">
+            <div class="control-row">
+              <label for="height5">Height <span id="height5Value" class="control-value">0.55</span></label>
+              <input id="height5" type="range" min="0" max="1" step="0.01" value="0.55">
+            </div>
+            <div class="control-row">
+              <label for="temperature5">Temperature <span id="temperature5Value" class="control-value">0.50</span></label>
+              <input id="temperature5" type="range" min="0" max="1" step="0.01" value="0.50">
+            </div>
+            <div class="control-row">
+              <label for="moisture5">Moisture <span id="moisture5Value" class="control-value">0.60</span></label>
+              <input id="moisture5" type="range" min="0" max="1" step="0.01" value="0.60">
+            </div>
+            <p class="preview-caption">The demo uses representative ranges for the seven supported texture types.</p>
+          </div>
+          <div class="biome-result">
+            <div id="biomeSwatch5" class="biome-swatch" aria-hidden="true"></div>
+            <h4 id="biomeName5">Forest</h4>
+            <p id="biomeReason5">Mid-height, temperate and moist.</p>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <h3>Why preview colors still exist</h3>
+    <p>
+      The final terrain is texture-based, but a simple color map remains valuable. It is cheap to inspect, easy to
+      display in the editor and useful for debugging whether biome classification is correct before looking at the shader.
+    </p>
+
+    <h3>Optional color smoothing</h3>
+    <p>
+      <code>BiomeGenerator</code> can average neighbouring preview colors when both biomes allow blending.
+      This only improves the generated color preview. The final texture transition is controlled separately by the
+      control-map weights and the shader.
+    </p>
+
+    <h3>Why range-based biome data was chosen</h3>
+    <div class="evaluation-grid">
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with hard-coded if-statements</p><h4>Biome design remains editable data</h4><p>Ranges, priorities, colors, texture types and decorations can be changed in the Inspector without rewriting the selection algorithm.</p></section>
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with one biome enum per height band</p><h4>Three dimensions create much more variation</h4><p>Height, temperature and moisture can all influence the result, so similar elevations do not have to look identical.</p></section>
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with requiring perfect range coverage</p><h4>Priority and closest-range fallback keep generation robust</h4><p>Priority supports intentional overlap, while fallback ensures every coordinate still receives a valid biome during experimentation.</p></section>
+      <section class="evaluation-card evaluation-limit"><p class="evaluation-label">Authoring improvement</p><h4>A validation view would make the data easier to inspect</h4><p>The current fallback is useful, but a future editor tool could visualise overlaps and uncovered combinations so the biome table is easier to verify.</p></section>
     </div>
-
-    <p>
-      Additional rules can be applied, such as spawn chance, sampling intervals,
-      and distance checks. This makes object placement depend on the generated
-      world, rather than being completely random.
-    </p>
-
-    <h3>Why This Matters for the Final System</h3>
-
-    <p>
-      This step is where the procedural system becomes usable as part of a real
-      project. The generated data is no longer only a visualization tool, but a
-      complete foundation for building a world inside Unity.
-    </p>
-
-    <p>
-      It also aligns with the goal of creating a reusable system. Because the
-      data drives multiple systems at once, the generator can be integrated into
-      different projects without needing to redesign each component separately.
-    </p>
-
-    <p>
-      This makes the system suitable for use as a general tool, for example as a
-      Unity Asset Store package that other developers can use in their own
-      games.
-    </p>
-
-    <h3>What This Step Adds to the System</h3>
-
-    <p>
-      This step transforms the project from a data-driven prototype into a full
-      procedural generation pipeline. The same noise-based data is now used to
-      generate terrain meshes, textures, and object placement in Unity.
-    </p>
-
-    <p>
-      It also introduces the first signs of performance challenges. Generating
-      meshes, textures, and objects for multiple chunks increases the workload
-      significantly, which leads directly into the next step.
-    </p>
-
-    <p>
-      In the next step, the focus shifts to analysing these performance
-      challenges and understanding where the main bottlenecks occur when scaling
-      the system.
-    </p>
-  </div>
+  </article>
 </details>

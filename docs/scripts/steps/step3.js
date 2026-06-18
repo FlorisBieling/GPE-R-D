@@ -1,196 +1,50 @@
-function generateStep3Noise(x, y, settings) {
-    let amplitude = 1;
-    let frequency = 1;
-    let noiseHeight = 0;
+"use strict";
 
-    for (let i = 0; i < settings.octaves; i++) {
-        const sampleX = (x - settings.halfWidth) / settings.scale * frequency;
-        const sampleY = (y - settings.halfHeight) / settings.scale * frequency;
+function initializeStep3() {
+  const canvas = document.getElementById("noiseCanvas3");
+  const seedButton = document.getElementById("generateStep3Button");
+  const inputIds = ["noiseScale3", "waterThreshold3", "beachThreshold3", "mountainThreshold3"];
 
-        let perlinValue = noise.perlin2(sampleX, sampleY);
-        perlinValue = perlinValue * 2 - 1;
+  if (!canvas || !seedButton || inputIds.some((id) => !document.getElementById(id)) || !window.TerrainDemo) {
+    return;
+  }
 
-        noiseHeight += perlinValue * amplitude;
+  let seed = 31;
 
-        amplitude *= settings.persistence;
-        frequency *= settings.lacunarity;
-    }
+  const render = () => {
+    const scale = TerrainDemo.readNumber("noiseScale3", 85);
+    const water = TerrainDemo.readNumber("waterThreshold3", 0.32);
+    const beach = Math.max(water, TerrainDemo.readNumber("beachThreshold3", 0.39));
+    const mountain = Math.max(beach, TerrainDemo.readNumber("mountainThreshold3", 0.72));
 
-    return noiseHeight;
-}
+    TerrainDemo.setText("scale3Value", String(Math.round(scale)));
+    TerrainDemo.setText("water3Value", water.toFixed(2));
+    TerrainDemo.setText("beach3Value", beach.toFixed(2));
+    TerrainDemo.setText("mountain3Value", mountain.toFixed(2));
 
-function getTerrainColor(value, thresholds) {
-    if (value < thresholds.water) {
-        return [54, 116, 217];
-    }
-
-    if (value < thresholds.beach) {
-        return [224, 211, 154];
-    }
-
-    if (value < thresholds.mountain) {
-        return [76, 166, 76];
-    }
-
-    return [130, 130, 130];
-}
-
-function drawTerrainMap() {
-    const scaleInput = document.getElementById("noiseScale3");
-    const octavesInput = document.getElementById("octaves3");
-    const persistenceInput = document.getElementById("persistence3");
-    const lacunarityInput = document.getElementById("lacunarity3");
-    const waterInput = document.getElementById("waterThreshold");
-    const beachInput = document.getElementById("beachThreshold");
-    const mountainInput = document.getElementById("mountainThreshold");
-    const canvas = document.getElementById("noiseCanvas3");
-
-    if (
-        !scaleInput ||
-        !octavesInput ||
-        !persistenceInput ||
-        !lacunarityInput ||
-        !waterInput ||
-        !beachInput ||
-        !mountainInput ||
-        !canvas ||
-        typeof noise === "undefined"
-    ) {
-        return;
-    }
-
-    const mapWidth = 400;
-    const mapHeight = 400;
-
-    const settings = {
-        scale: Math.max(0.0001, parseFloat(scaleInput.value) || 1),
-        octaves: parseInt(octavesInput.value, 10) || 1,
-        persistence: parseFloat(persistenceInput.value) || 0.5,
-        lacunarity: parseFloat(lacunarityInput.value) || 2,
-        halfWidth: mapWidth / 2,
-        halfHeight: mapHeight / 2
-    };
-
-    const thresholds = {
-        water: parseFloat(waterInput.value) || 0.35,
-        beach: parseFloat(beachInput.value) || 0.42,
-        mountain: parseFloat(mountainInput.value) || 0.7
-    };
-
-    if (thresholds.beach < thresholds.water) {
-        thresholds.beach = thresholds.water;
-    }
-
-    if (thresholds.mountain < thresholds.beach) {
-        thresholds.mountain = thresholds.beach;
-    }
-
-    const ctx = canvas.getContext("2d");
-    const imageData = ctx.createImageData(mapWidth, mapHeight);
-
-    const values = new Array(mapWidth * mapHeight);
-    let minNoiseHeight = Infinity;
-    let maxNoiseHeight = -Infinity;
-
-    for (let y = 0; y < mapHeight; y++) {
-        for (let x = 0; x < mapWidth; x++) {
-            const noiseHeight = generateStep3Noise(x, y, settings);
-            const index = y * mapWidth + x;
-
-            values[index] = noiseHeight;
-
-            if (noiseHeight < minNoiseHeight) {
-                minNoiseHeight = noiseHeight;
-            }
-
-            if (noiseHeight > maxNoiseHeight) {
-                maxNoiseHeight = noiseHeight;
-            }
-        }
-    }
-
-    const range = maxNoiseHeight - minNoiseHeight || 1;
-
-    for (let y = 0; y < mapHeight; y++) {
-        for (let x = 0; x < mapWidth; x++) {
-            const valueIndex = y * mapWidth + x;
-            const normalizedValue = (values[valueIndex] - minNoiseHeight) / range;
-            const color = getTerrainColor(normalizedValue, thresholds);
-            const pixelIndex = valueIndex * 4;
-
-            imageData.data[pixelIndex] = color[0];
-            imageData.data[pixelIndex + 1] = color[1];
-            imageData.data[pixelIndex + 2] = color[2];
-            imageData.data[pixelIndex + 3] = 255;
-        }
-    }
-
-    const tempCanvas = document.createElement("canvas");
-    tempCanvas.width = mapWidth;
-    tempCanvas.height = mapHeight;
-
-    const tempCtx = tempCanvas.getContext("2d");
-    tempCtx.putImageData(imageData, 0, 0);
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(tempCanvas, 0, 0, canvas.width, canvas.height);
-}
-
-function updateStep3SliderValues() {
-    document.getElementById("scale3Value").textContent = document.getElementById("noiseScale3").value;
-    document.getElementById("octaves3Value").textContent = document.getElementById("octaves3").value;
-    document.getElementById("persistence3Value").textContent = parseFloat(document.getElementById("persistence3").value).toFixed(2);
-    document.getElementById("lacunarity3Value").textContent = parseFloat(document.getElementById("lacunarity3").value).toFixed(2);
-    document.getElementById("waterThresholdValue").textContent = parseFloat(document.getElementById("waterThreshold").value).toFixed(2);
-    document.getElementById("beachThresholdValue").textContent = parseFloat(document.getElementById("beachThreshold").value).toFixed(2);
-    document.getElementById("mountainThresholdValue").textContent = parseFloat(document.getElementById("mountainThreshold").value).toFixed(2);
-}
-
-function setupStep3() {
-    const scaleInput = document.getElementById("noiseScale3");
-    const octavesInput = document.getElementById("octaves3");
-    const persistenceInput = document.getElementById("persistence3");
-    const lacunarityInput = document.getElementById("lacunarity3");
-    const waterInput = document.getElementById("waterThreshold");
-    const beachInput = document.getElementById("beachThreshold");
-    const mountainInput = document.getElementById("mountainThreshold");
-    const button = document.getElementById("generateNoiseButton3");
-
-    if (
-        !scaleInput ||
-        !octavesInput ||
-        !persistenceInput ||
-        !lacunarityInput ||
-        !waterInput ||
-        !beachInput ||
-        !mountainInput ||
-        !button
-    ) {
-        return;
-    }
-
-    const inputs = [
-        scaleInput,
-        octavesInput,
-        persistenceInput,
-        lacunarityInput,
-        waterInput,
-        beachInput,
-        mountainInput
-    ];
-
-    inputs.forEach(input => {
-        input.addEventListener("input", () => {
-            updateStep3SliderValues();
-            drawTerrainMap();
-        });
+    const values = TerrainDemo.generateNoiseMap(canvas.width, canvas.height, {
+      scale,
+      octaves: 5,
+      persistence: 0.5,
+      lacunarity: 2,
+      seed
     });
 
-    button.addEventListener("click", drawTerrainMap);
+    TerrainDemo.drawMap(canvas, values, (value) => {
+      if (value < water) return [31, 83, 145, 255];
+      if (value < beach) return [220, 202, 145, 255];
+      if (value < mountain) return [62, 139, 80, 255];
+      return [116, 123, 132, 255];
+    });
+  };
 
-    updateStep3SliderValues();
-    drawTerrainMap();
+  TerrainDemo.bindInputs(inputIds, TerrainDemo.debounce(render, 45));
+  seedButton.addEventListener("click", () => {
+    seed = Math.floor(Math.random() * 10000);
+    render();
+  });
+
+  render();
 }
 
-window.addEventListener("stepsLoaded", setupStep3);
+window.addEventListener("terrain:content-ready", initializeStep3);

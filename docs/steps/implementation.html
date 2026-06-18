@@ -1,263 +1,138 @@
 <details class="step-wrapper" open>
-  <summary class="step-summary">How to implement in Unity</summary>
-
-  <div class="step-card">
-    <h3>Goal of This Setup</h3>
-
-    <p>
-      This section explains how the procedural terrain system can be added to a
-      Unity project. The goal is not only to show the final result, but also to
-      make the system reusable. By following this setup, the generator can be
-      placed into another Unity scene and used to create terrain, biome colors,
-      and biome-based decoration.
+  <summary class="step-summary">Implementation guide: adding the current system to Unity</summary>
+  <article class="step-card">
+    <p class="section-kicker">Practical setup</p>
+    <p class="lead">
+      The download is now one complete package containing the refactored terrain scripts, custom URP shader,
+      material snapshot, texture-assignment utility and camera controls. The raw Asset Store textures are intentionally not included.
     </p>
 
-    <p>
-      The implementation is centered around one empty GameObject in the scene.
-      This object acts as the main controller for the terrain system and holds
-      the scripts that generate the data, preview the terrain, and load chunks
-      around the player.
-    </p>
-
-    <h3>1. Create the Main Terrain Object</h3>
-
-    <p>
-      Start by creating an empty GameObject in the Unity hierarchy. This object
-      can be named something like <code>WorldGenerator</code> or
-      <code>TerrainSystem</code>. Attach the following scripts to this object:
-      <code>MapGenerator</code>, <code>MapDisplay</code>, and
-      <code>EndlessTerrain</code>.
-    </p>
-
-    <p>
-      <strong>MapGenerator</strong> is the core of the system. It generates the
-      height map and temperature map, combines them into biome colors, and also
-      prepares the decoration spawn data. The map generation uses Perlin noise,
-      and the final biome result is decided by combining height and temperature
-      values. 
-    </p>
-
-    <p>
-      <strong>MapDisplay</strong> is mainly used for testing. It can draw the
-      generated result onto a single mesh or texture in the editor, which makes
-      it useful while tuning settings. It is not required for the actual endless
-      terrain system during gameplay, but it is useful while developing and
-      debugging the generator. :contentReference[oaicite:6]{index=6}
-    </p>
-
-    <p>
-      <strong>EndlessTerrain</strong> is responsible for loading and updating
-      terrain chunks around the viewer. It checks where the viewer is, decides
-      which chunks should be visible, and chooses the correct level of detail
-      for each chunk. :contentReference[oaicite:7]{index=7}
-    </p>
-
-    <h3>2. Assign the Required References</h3>
-
-    <p>
-      In the <code>MapDisplay</code> component, assign the mesh or renderer that
-      should be used for previewing the terrain in the editor. This is only
-      needed for testing purposes. The script can draw either a texture or a
-      generated mesh to show the current map result directly in Unity. :contentReference[oaicite:8]{index=8}
-    </p>
-
-    <p>
-      In the <code>EndlessTerrain</code> component, assign a
-      <code>Viewer</code> transform. This is usually the player or camera. The
-      system uses this transform to calculate which chunks are close enough to
-      be visible and which level of detail should be used. The visible distance
-      is taken from the configured detail levels. :contentReference[oaicite:9]{index=9}
-    </p>
-
-    <p>
-      Also assign the terrain material in <code>EndlessTerrain</code>. This
-      material is applied to the generated chunk meshes so the biome color map
-      can be shown on the terrain.
-    </p>
-
-    <h3>3. Configure the Map Generator</h3>
-
-    <p>
-      The <code>MapGenerator</code> component contains the main terrain
-      settings. These include values such as noise scale, octaves, persistence,
-      lacunarity, seed, redistribution power, mesh height multiplier, and the
-      height curve. Together, these values control the shape and variation of
-      the generated world. The generator creates both a height map and a
-      temperature map, where the temperature map uses a different seed and a
-      larger scale so that climate variation changes more gradually across the
-      world. 
-    </p>
-
-    <p>
-      If <code>Auto Update</code> is enabled, the preview can update directly in
-      the editor while changing values. This is useful while testing settings.
-    </p>
-
-    <h3>4. Set Up the Height Types</h3>
-
-    <p>
-      The most important part of the biome setup is the
-      <code>Height Types</code> array. These should always be entered from low
-      to high, meaning from values near <code>0</code> up to values near
-      <code>1</code>. In practice, this means you start with something like
-      oceans, then low land, then higher land, hills, and mountains.
-    </p>
-
-    <p>
-      Each height type contains a <code>height</code> value and a list of
-      <code>Biome Types</code>. The generator checks the current height first
-      and then checks the temperature within that height range. This is how the
-      system decides which biome a position belongs to. The biome color returned
-      by the generator is taken directly from that result. :contentReference[oaicite:11]{index=11}
-    </p>
-
-    <p>
-      For every biome, you should fill in:
-    </p>
-
-    <p>
-      - a <strong>Name</strong>, used for readability and layer grouping<br>
-      - a <strong>Temperature</strong> value, also ordered from low to high
-      within that height type<br>
-      - a <strong>Color</strong>, which becomes the terrain color for that biome
-    </p>
-
-    <p>
-      This means that one height level can contain multiple biome variations.
-      For example, one land height can become a cold plain, a normal plain, or
-      a warm plain depending on the temperature value.
-    </p>
-
-    <h3>5. Add Decoration Layers</h3>
-
-    <p>
-      Each biome can also contain one or more
-      <code>Decoration Layers</code>. These are used to place objects such as
-      trees, rocks, grass, or other environment prefabs. The system first checks
-      which biome is present at a position, then looks at the decoration layers
-      for that biome, and finally decides whether something should spawn there. 
-    </p>
-
-    <p>
-      In each decoration layer, you can assign one or more
-      <strong>prefabs</strong>. When the system decides to spawn something in
-      that layer, one of those prefabs is chosen randomly.
-    </p>
-
-    <p>
-      The decoration layer settings work as follows:
-    </p>
-
-    <p>
-      <strong>Name</strong><br>
-      This is only used for clarity in the inspector and for grouping the spawn
-      cache internally.
-    </p>
-
-    <p>
-      <strong>Prefabs</strong><br>
-      This is the list of objects that can spawn in this layer. You can place
-      one prefab here, or multiple prefabs if you want variation.
-    </p>
-
-    <p>
-      <strong>Spawn Chance</strong><br>
-      This controls the chance that a valid spawn attempt will actually place an
-      object. Lower values make the layer more sparse.
-    </p>
-
-    <p>
-      <strong>Noise Scale</strong><br>
-      This controls how stretched or compressed the decoration noise pattern is.
-      A smaller scale creates more rapid variation, while a larger scale creates
-      broader grouped areas.
-    </p>
-
-    <p>
-      <strong>Noise Threshold</strong><br>
-      This is the minimum decoration noise value needed before spawning is
-      allowed. Raising this threshold creates fewer and more clustered spawn
-      areas.
-    </p>
-
-    <p>
-      <strong>Min Distance</strong><br>
-      This sets the minimum distance allowed between placed objects in the same
-      layer. It helps prevent objects such as trees from spawning too close
-      together.
-    </p>
-
-    <p>
-      <strong>Attempts Per Tile</strong><br>
-      This controls how many spawn attempts are made for each checked tile.
-      Higher values can increase density, but also increase cost.
-    </p>
-
-    <p>
-      <strong>Sample Interval</strong><br>
-      This determines how often tiles are checked. For example, a value of
-      <code>3</code> means the system only checks every third tile in both
-      directions. This is useful for reducing cost and avoiding excessive object
-      counts. The generator explicitly skips positions that do not match the
-      sample interval. :contentReference[oaicite:13]{index=13}
-    </p>
-
-    <p>
-      <strong>Random Offset Range</strong><br>
-      This adds random local position variation so objects do not all appear in
-      the exact center of a tile.
-    </p>
-
-    <p>
-      <strong>Random Scale Range</strong><br>
-      This allows spawned prefabs to vary in size between a minimum and maximum
-      value.
-    </p>
-
-    <p>
-      <strong>Noise Offset</strong><br>
-      This shifts the decoration noise pattern, making it possible to create a
-      different placement layout without changing the rest of the biome setup.
-    </p>
-
-    <h3>6. How the World Is Generated at Runtime</h3>
-
-    <p>
-      When the scene runs, the generator creates map data for chunks around the
-      viewer. Each chunk receives a height map, temperature map, and color map.
-      That data is then used to build a mesh, apply a texture, and prepare
-      decoration spawn positions. 
-    </p>
-
-    <p>
-      The actual object instantiation is handled later by the terrain chunk
-      logic. Decorations are not all spawned in one frame. Instead, they are
-      instantiated gradually, which helps reduce visible lag spikes during
-      gameplay. :contentReference[oaicite:15]{index=15}
-    </p>
-
-    <h3>7. Downloadable Files</h3>
-
-    <p>
-      The scripts below can be offered as downloadable files on the site. A
-      simple way to do this is by placing the files in a folder such as
-      <code>downloads/unity/</code> inside the repository and linking them with
-      the <code>download</code> attribute.
-    </p>
-
-    <div class="download-grid">
-      <a class="download-button" href="downloads/unity/MapGenerator.cs" download>Download MapGenerator.cs</a>
-      <a class="download-button" href="downloads/unity/EndlessTerrain.cs" download>Download EndlessTerrain.cs</a>
-      <a class="download-button" href="downloads/unity/MapDisplay.cs" download>Download MapDisplay.cs</a>
-      <a class="download-button" href="downloads/unity/MeshGenerator.cs" download>Download MeshGenerator.cs</a>
-      <a class="download-button" href="downloads/unity/Noise.cs" download>Download Noise.cs</a>
-      <a class="download-button" href="downloads/unity/TextureGenerator.cs" download>Download TextureGenerator.cs</a>
+    <div class="single-download">
+      <a class="download-button" href="downloads/ProceduralTerrainCompletePackage.zip" download>Download ProceduralTerrainCompletePackage.zip</a>
+      <p>One zip replaces the previous list of separate script downloads.</p>
     </div>
 
+    <div class="callout callout-warning">
+      <strong>Dependency:</strong> import
+      <a href="https://assetstore.unity.com/packages/2d/textures-materials/nature/yughues-free-ground-materials-13001" target="_blank" rel="noreferrer">Yughues Free Ground Materials</a>
+      from the Unity Asset Store before running the assignment tool. The package does not redistribute the original texture files.
+    </div>
+
+    <h3>1. Copy the package into Unity</h3>
+    <ol class="clean-list">
+      <li>Make a Git commit or project backup first.</li>
+      <li>Extract the zip outside the Unity project.</li>
+      <li>Copy the contents of <code>Assets/Perlin/</code> into your project's <code>Assets/Perlin/</code> folder.</li>
+      <li>Do not blindly overwrite a working scene or material. Compare them first when your project already contains references.</li>
+      <li>Allow Unity to recompile and resolve the shader before continuing.</li>
+    </ol>
+
+    <div class="callout">
+      <strong>Material portability note:</strong> Unity materials use asset GUIDs internally. The included
+      <code>MaterialProceduralTerrain.mat</code> is useful as a project snapshot, but shader and texture references can be lost
+      when copied without the original <code>.meta</code> files. Reassign the shader and run the editor utility when necessary.
+    </div>
+
+    <h3>2. Use the recommended folder structure</h3>
     <p>
-      These files contain the core generation logic used in this project,
-      including noise generation, mesh creation, texture generation, chunk
-      loading, biome selection, and decoration spawning. :contentReference[oaicite:16]{index=16} :contentReference[oaicite:17]{index=17} :contentReference[oaicite:18]{index=18} :contentReference[oaicite:19]{index=19} :contentReference[oaicite:20]{index=20} :contentReference[oaicite:21]{index=21}
+      The current screenshots are understandable, but the improved package moves the editor-only assignment script out of
+      <code>Materials</code> and renames the camera files to match their MonoBehaviour classes.
     </p>
-  </div>
+
+    <div class="code-block"><pre><code>Assets/Perlin/
+├── Editor/
+│   └── AssignExactYFGMBiomeTextures_Final.cs
+├── Materials/
+│   ├── MaterialProceduralTerrain.mat
+│   └── ProceduralBiomeTexturesURP_Final.shader
+├── Scripts/
+│   ├── Camera/
+│   ├── Data/
+│   ├── Generation/
+│   ├── Preview/
+│   └── Runtime/
+└── Perlin.unity</code></pre></div>
+
+    <h3>3. Configure the shader material</h3>
+    <ol class="clean-list">
+      <li>Create or select <code>MaterialProceduralTerrain</code>.</li>
+      <li>Assign <code>Custom/ProceduralBiomeTexturesURP</code> as its shader.</li>
+      <li>Import the Yughues texture package.</li>
+      <li>Select the material in the Project window.</li>
+      <li>Run <code>Tools → Procedural Terrain → Assign Final YFGM Textures</code>.</li>
+      <li>Check the Console for missing texture names and inspect the seven texture groups.</li>
+    </ol>
+
+    <div class="double-preview">
+      <div class="project-image" data-src="images/unity-architecture-materials.png" data-alt="Unity Materials folder containing the custom terrain shader and material">
+        <div class="image-placeholder"><span>Use supplied Materials screenshot</span><strong>images/unity-architecture-materials.png</strong><small>Show the shader and material assets.</small></div>
+      </div>
+      <div class="project-image" data-src="images/shader-material-inspector.png" data-alt="Terrain material Inspector with biome texture properties">
+        <div class="image-placeholder"><span>Add material Inspector screenshot</span><strong>images/shader-material-inspector.png</strong><small>Show assigned texture maps and scale values.</small></div>
+      </div>
+    </div>
+
+    <h3>4. Create the scene objects</h3>
+    <ol class="clean-list">
+      <li>Create an empty GameObject named <code>TerrainSystem</code>.</li>
+      <li>Add <code>MapGenerator</code> and <code>EndlessTerrain</code>.</li>
+      <li>Assign the player or camera Transform to <code>EndlessTerrain.viewer</code>.</li>
+      <li>Assign the procedural terrain material to <code>EndlessTerrain.mapMaterial</code>.</li>
+      <li>Create an optional preview object with a Renderer, MeshFilter, MeshRenderer and <code>MapDisplay</code>.</li>
+      <li>Add <code>TopDownCameraMovement</code> and <code>CameraHeightControl</code> to the viewer when the research scene needs free camera movement.</li>
+    </ol>
+
+    <div class="double-preview">
+      <div class="project-image" data-src="images/unity-hierarchy-terrain-system.png" data-alt="Unity hierarchy with TerrainSystem and preview objects">
+        <div class="image-placeholder"><span>Add hierarchy screenshot</span><strong>images/unity-hierarchy-terrain-system.png</strong><small>Show object names and attached components.</small></div>
+      </div>
+      <div class="project-image" data-src="images/unity-inspector-map-generator.png" data-alt="MapGenerator Inspector showing noise climate biome blend and snow settings">
+        <div class="image-placeholder"><span>Add Inspector screenshot</span><strong>images/unity-inspector-map-generator.png</strong><small>Open the main MapGenerator settings.</small></div>
+      </div>
+    </div>
+
+    <h3>5. Configure noise and mesh settings</h3>
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead><tr><th>Setting</th><th>Purpose</th><th>Why this setting is useful</th></tr></thead>
+        <tbody>
+          <tr><td>Normalize Mode</td><td>Maps accumulated noise into a usable range.</td><td>Global normalization keeps independently generated chunks comparable; local normalization remains useful when inspecting a single preview.</td></tr>
+          <tr><td>Noise Scale</td><td>Controls the size of terrain features.</td><td>It provides a direct artistic control over whether the world contains broad regions or smaller, busier features.</td></tr>
+          <tr><td>Octaves</td><td>Adds multiple levels of detail.</td><td>Additional octaves add progressively smaller detail while preserving the large base forms.</td></tr>
+          <tr><td>Persistence</td><td>Controls the strength of later octaves.</td><td>It lets the designer decide how strongly the smaller octave details remain visible.</td></tr>
+          <tr><td>Lacunarity</td><td>Controls frequency growth.</td><td>It controls how quickly each octave moves from broad variation to fine detail.</td></tr>
+          <tr><td>Mesh Height Multiplier</td><td>Scales normalized height into Unity units.</td><td>It converts the normalized map into a world scale that matches the camera and intended landscape size.</td></tr>
+          <tr><td>Mesh Height Curve</td><td>Remaps height non-linearly.</td><td>It shapes the height distribution without changing the noise source, making flat lowlands and steeper peaks easy to author.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>6. Configure climate and biome rules</h3>
+    <p>
+      Use separate scale multipliers and offsets for temperature and moisture. Add explicit biome texture types and
+      clear min/max ranges for height, temperature and moisture. Priority is useful for intentional overlap, such as a narrow beach taking precedence over a broad plains range. The closest-range fallback then keeps every generated coordinate valid.
+    </p>
+
+    <h3>7. Configure control-map blending and snow</h3>
+    <p>
+      Start with a clear base transition and then add softness, boundary noise and patch variation step by step. For snow, first choose the start and full-coverage heights, then use line variation and holes to make the border more natural.
+    </p>
+
+    <h3>8. Configure decorations and LOD</h3>
+    <p>
+      Begin with a readable sample interval and a small set of prefabs, then increase density while observing the result. Decorations are shown at LOD 0 so object detail is concentrated near the viewer, where it contributes most.
+    </p>
+
+    <h3>9. Test in this order</h3>
+    <ol class="clean-list">
+      <li>Compile scripts and verify the editor utility is inside an <code>Editor</code> folder.</li>
+      <li>Verify the material uses the custom URP shader and has the expected texture sets.</li>
+      <li>Preview height, temperature and moisture separately.</li>
+      <li>Preview biome colors and inspect gaps or accidental overlaps.</li>
+      <li>Preview Control Map A and B.</li>
+      <li>Preview the final mesh and material, especially steep slopes and chunk borders.</li>
+      <li>Enter Play Mode and test viewer movement, chunk loading and LOD switching.</li>
+      <li>Enable decorations last and profile frame time, memory and object count.</li>
+    </ol>
+  </article>
 </details>

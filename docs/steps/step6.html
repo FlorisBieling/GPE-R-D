@@ -1,160 +1,94 @@
 <details class="step-wrapper" open>
-  <summary class="step-summary">Step 6: Performance Problems</summary>
-
-  <div class="step-card">
-    <h3>Goal of This Step</h3>
-
-    <p>
-      In the previous step, the procedural system was extended into a complete
-      Unity pipeline, where noise data was used to generate terrain meshes,
-      textures, and object placement. While this makes the system much more
-      useful, it also introduces a new challenge: performance.
+  <summary class="step-summary">Step 6: Control maps and shader texture blending</summary>
+  <article class="step-card">
+    <p class="section-kicker">Final terrain appearance</p>
+    <p class="lead">
+      A biome enum can identify one dominant biome, but it cannot describe a gradual transition. Control maps solve
+      that problem by storing several texture weights at every terrain coordinate.
     </p>
 
-    <p>
-      This step mainly answers <strong>sub question 3</strong>: what performance
-      challenges occur when generating large procedural worlds in real time.
-    </p>
-
-    <h3>Why Performance Becomes a Problem</h3>
-
-    <p>
-      Procedural generation requires a large number of calculations. Even a
-      single map involves iterating over every position in a grid and sampling
-      multiple layers of noise. When this is expanded to a full system with
-      chunks, meshes, and object placement, the amount of work increases
-      rapidly.
-    </p>
+    <h3>How seven biome weights fit into two textures</h3>
+    <div class="channel-grid">
+      <div class="channel"><strong>A.R</strong><span>Water</span></div>
+      <div class="channel"><strong>A.G</strong><span>Beach</span></div>
+      <div class="channel"><strong>A.B</strong><span>Plains</span></div>
+      <div class="channel"><strong>A.A</strong><span>Forest</span></div>
+      <div class="channel"><strong>B.R</strong><span>Desert</span></div>
+      <div class="channel"><strong>B.G</strong><span>Mountain</span></div>
+      <div class="channel"><strong>B.B</strong><span>Snow</span></div>
+    </div>
 
     <p>
-      What worked well for small demos in earlier steps becomes much heavier
-      when applied continuously during gameplay. Instead of generating one map,
-      the system now generates multiple chunks, each with their own data and
-      objects.
+      Each channel stores a number between 0 and 1. After normalization, all active weights add up to approximately 1.
+      The shader samples the two maps and multiplies each terrain texture by its corresponding channel. This is why
+      one pixel can contain, for example, 70% plains and 30% forest instead of having to choose one enum value.
     </p>
 
-    <h3>Where the Cost Comes From</h3>
+    <h3>How the weights are created</h3>
+    <div class="code-block"><pre><code>float weight = SmoothRangeWeight(noisyHeight, biome.minHeight, biome.maxHeight, softness)
+    * SmoothRangeWeight(temperature, biome.minTemperature, biome.maxTemperature, softness)
+    * SmoothRangeWeight(moisture, biome.minMoisture, biome.maxMoisture, softness);</code></pre></div>
 
     <p>
-      The main performance cost comes from several combined factors:
+      A biome only receives a strong weight when all three input values are close to its configured ranges.
+      <code>biomeBlendSoftness</code> controls the width of the transitions. Boundary noise offsets the local height,
+      while patch noise introduces subtle variation inside transition areas so borders do not look mathematically straight.
     </p>
 
+    <details class="demo-wrapper" open>
+      <summary class="demo-summary">Interactive control-map weights</summary>
+      <div class="demo-content">
+        <div class="demo-layout">
+          <div class="controls">
+            <div class="control-row">
+              <label for="height6">Height <span id="height6Value" class="control-value">0.56</span></label>
+              <input id="height6" type="range" min="0" max="1" step="0.01" value="0.56">
+            </div>
+            <div class="control-row">
+              <label for="temperature6">Temperature <span id="temperature6Value" class="control-value">0.48</span></label>
+              <input id="temperature6" type="range" min="0" max="1" step="0.01" value="0.48">
+            </div>
+            <div class="control-row">
+              <label for="moisture6">Moisture <span id="moisture6Value" class="control-value">0.55</span></label>
+              <input id="moisture6" type="range" min="0" max="1" step="0.01" value="0.55">
+            </div>
+            <div class="control-row">
+              <label for="softness6">Blend softness <span id="softness6Value" class="control-value">0.08</span></label>
+              <input id="softness6" type="range" min="0.01" max="0.25" step="0.01" value="0.08">
+            </div>
+          </div>
+          <div id="weightBars6" class="weight-bars" aria-label="Biome texture weights"></div>
+        </div>
+      </div>
+    </details>
+
+    <h3>Water is handled differently</h3>
     <p>
-      - nested loops for noise generation<br />
-      - multiple data layers (height and temperature)<br />
-      - mesh generation for each chunk<br />
-      - biome checks for every tile<br />
-      - object placement logic and instantiation
+      In the current generator, a selected water biome immediately receives a water weight of 1. This prevents nearby
+      land textures from bleeding into water. All non-water terrain uses the smooth multi-biome weighting process.
     </p>
 
-    <p>
-      These systems all build on top of each other. While each individual step
-      may be manageable, together they significantly increase the total
-      workload.
-    </p>
+    <h3>Why one biome enum is not enough</h3>
+    <div class="callout">
+      <strong>An enum is still useful for logic, but not sufficient for rendering.</strong>
+      The biome index answers “which biome is dominant?” The control maps answer “how much of every texture should be
+      visible here?” Keeping those responsibilities separate makes both systems clearer.
+    </div>
 
-    <h3>Nested Calculations and Scaling</h3>
+    <div class="project-image" data-src="images/control-maps-preview.png" data-alt="Unity editor preview of control map A and control map B">
+      <div class="image-placeholder">
+        <span>Recommended debug image</span>
+        <strong>images/control-maps-preview.png</strong>
+        <small>Show Control Map A and B next to the final textured terrain.</small>
+      </div>
+    </div>
 
-    <p>
-      One of the main reasons performance becomes an issue is the use of nested
-      loops. For every position in the map, multiple noise calculations are
-      performed. When using multiple octaves, each position already requires
-      several function calls.
-    </p>
-
-    <p>
-      When the map size increases, the total number of operations grows very
-      quickly. A relatively small map can already require tens of thousands of
-      calculations, and this cost multiplies when multiple chunks are generated.
-    </p>
-
-    <h3>Object Placement as a Bottleneck</h3>
-
-    <p>
-      A major issue observed in this project was object placement. When many
-      objects, such as trees or grass, were instantiated at once, Unity tried to
-      process all of them in a single frame.
-    </p>
-
-    <p>
-      This caused noticeable lag spikes. The frame would freeze temporarily
-      while all objects were created, which made the system unsuitable for
-      real-time use.
-    </p>
-
-    <p>
-      This shows that object instantiation can be more expensive than the
-      underlying noise calculations. Even if the data generation is efficient,
-      creating large numbers of GameObjects at once can become a major
-      bottleneck.
-    </p>
-
-    <h3>The Unity Main Thread</h3>
-
-    <p>
-      Another important limitation comes from how Unity handles execution. Most
-      operations, including rendering, physics, and object creation, run on the
-      main thread. This means that if too much work is done at once, the entire
-      frame is delayed.
-    </p>
-
-    <p>
-      Because of this, even if individual calculations are relatively simple,
-      performing too many of them in a single frame can lead to stuttering or
-      freezing.
-    </p>
-
-    <h3>Why Real-Time Generation Is Different</h3>
-
-    <p>
-      In earlier steps, maps were generated as isolated demos. In those cases,
-      performance was less important because the generation only happened once.
-    </p>
-
-    <p>
-      In a real-time system, this is very different. New terrain chunks must be
-      generated continuously as the player moves through the world. This means
-      the system must balance generation speed with frame stability.
-    </p>
-
-    <p>
-      What was acceptable in a static preview becomes a problem when the same
-      work needs to be repeated during gameplay.
-    </p>
-
-    <h3>Why These Problems Matter</h3>
-
-    <p>
-      These performance issues highlight an important limitation of procedural
-      generation. While it is powerful, it is not free. As the system becomes
-      more complex, the cost increases quickly.
-    </p>
-
-    <p>
-      Without optimization, the system can suffer from frame drops, lag spikes,
-      or unresponsive behavior. This makes it unsuitable for real-time
-      applications such as games.
-    </p>
-
-    <p>
-      This directly answers sub question 3: generating large procedural worlds
-      in real time introduces significant computational cost, especially when
-      combining multiple systems such as noise generation, mesh creation, and
-      object placement.
-    </p>
-
-    <h3>What This Step Adds to the System</h3>
-
-    <p>
-      This step does not introduce a new feature, but instead analyses the
-      limitations of the current system. It identifies where the main bottlenecks
-      occur and why the current approach is not yet efficient enough.
-    </p>
-
-    <p>
-      Understanding these problems is essential before applying optimizations.
-      In the next step, different techniques will be explored to reduce the
-      workload and improve performance.
-    </p>
-  </div>
+    <h3>Why control maps were chosen</h3>
+    <div class="evaluation-grid">
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with one biome enum</p><h4>Several textures can contribute to one pixel</h4><p>A dominant enum can only choose one result. Control-map weights support smooth plains-to-forest or mountain-to-snow transitions.</p></section>
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with splitting the mesh by material</p><h4>The geometry stays simple</h4><p>Chunks do not need extra submeshes or material boundaries. The same mesh can display any biome combination through two compact RGBA maps.</p></section>
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with storing weights in vertices</p><h4>Texture resolution is independent from mesh LOD</h4><p>The blend can remain detailed even when a distant chunk uses fewer vertices, and the shader receives the same channel layout for every LOD.</p></section>
+      <section class="evaluation-card evaluation-limit"><p class="evaluation-label">Optimisation opportunity</p><h4>Profile the active texture count</h4><p>Two control maps are a compact interface, but the final shader still samples several source textures. Optimisation is only necessary when profiling shows this is a real GPU bottleneck.</p></section>
+    </div>
+  </article>
 </details>

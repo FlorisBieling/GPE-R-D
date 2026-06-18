@@ -1,197 +1,85 @@
 <details class="step-wrapper" open>
-  <summary class="step-summary">Conclusion & Future Work</summary>
-
-  <div class="step-card">
-    <h3>Conclusion</h3>
-
-    <p>
-      This project explored how procedural terrain can be generated using Perlin
-      noise and how such a system can be optimized for real-time use in Unity.
+  <summary class="step-summary">Conclusion, design reasoning and future work</summary>
+  <article class="step-card">
+    <p class="section-kicker">Evaluation</p>
+    <p class="lead">
+      The project demonstrates a well-connected procedural terrain pipeline rather than a collection of isolated
+      experiments. Its strongest result is that each stage solves a different problem: noise creates continuous data,
+      biome rules add meaning, control maps describe transitions, the shader creates the final surface and the runtime
+      architecture keeps the world responsive around the viewer.
     </p>
 
+    <h3>Answer to the research question</h3>
     <p>
-      Perlin noise proved to be a strong foundation for terrain generation. By
-      adjusting parameters such as scale, octaves, persistence, and lacunarity,
-      it is possible to control both the structure and the level of detail in
-      the generated terrain.
+      Coherent noise becomes practical terrain through a pipeline. Fractal noise supplies continuous values; height
+      becomes geometry; temperature and moisture add classification dimensions; biome rules assign meaning; control
+      maps carry blend weights; the custom URP shader turns those weights into a textured surface; and chunks, LOD,
+      background calculation and gradual spawning keep the world interactive.
     </p>
 
-    <p>
-      However, a single noise layer was not sufficient to create varied and
-      believable environments. By combining multiple maps, specifically height
-      and temperature, the system was extended into a biome-based approach that
-      produces more diverse and realistic results.
-    </p>
+    <h3>What is genuinely good about the system</h3>
+    <ul class="clean-list">
+      <li><strong>Internal consistency:</strong> the same world data drives shape, classification, rendering and decoration.</li>
+      <li><strong>Appropriate separation:</strong> dominant biomes handle logic while weighted control maps handle rendering transitions.</li>
+      <li><strong>Data-driven authoring:</strong> biome ranges, priorities, textures and decoration layers can be changed without rewriting the algorithm.</li>
+      <li><strong>Seamless terrain texturing:</strong> world-space sampling prevents the texture pattern from restarting at every chunk.</li>
+      <li><strong>Scalable world structure:</strong> chunks and LOD concentrate generation and geometry around the viewer.</li>
+      <li><strong>Safe Unity integration:</strong> calculation data is prepared away from the main thread and applied through queued callbacks.</li>
+      <li><strong>Reproducibility:</strong> seeded maps and deterministic decoration decisions regenerate the same world consistently.</li>
+      <li><strong>Maintainability:</strong> the former large generator is now divided into classes with focused responsibilities.</li>
+    </ul>
 
-    <p>
-      A major limitation of the system was performance. As the generation
-      pipeline became more complex, issues such as lag spikes during object
-      instantiation became visible. This showed that procedural generation is
-      not only a design problem, but also a performance problem.
-    </p>
+    <h3>Why these choices were preferred over the alternatives</h3>
+    <div class="card-grid">
+      <section class="card"><h4>Procedural maps instead of authored world textures</h4><p>Seeded maps support endless generation and do not require one enormous stored height or biome image.</p></section>
+      <section class="card"><h4>Range-based biomes instead of nested hard-coded rules</h4><p>The world design remains editable in data and can grow without turning the selection method into a long conditional block.</p></section>
+      <section class="card"><h4>Control maps instead of one material per biome</h4><p>Several textures can blend on the same chunk without adding submesh boundaries or changing materials across the terrain.</p></section>
+      <section class="card"><h4>Custom HLSL instead of relying entirely on a ready-made material</h4><p>The shader matches the exact seven-channel workflow, preserves world-space continuity and documents how the Asset Store textures are combined.</p></section>
+    </div>
 
-    <p>
-      By applying techniques such as chunk-based generation, level of detail,
-      smarter object placement, and multithreading, the system became more
-      suitable for real-time use.
-    </p>
+    <h3>Most relevant area for improvement</h3>
+    <div class="callout">
+      The next decision should be based on profiling. The current system is technically sound, but target-hardware
+      measurements should determine whether the first optimisation belongs in shader sampling, runtime resource reuse,
+      thread scheduling or dense decoration rendering. This is a refinement of a working architecture rather than a
+      replacement of the chosen approach.
+    </div>
 
-    <h3>Future Work</h3>
+    <h3>Recommended future work, in priority order</h3>
+    <div class="card-grid">
+      <section class="card"><h4>1. Profile before rewriting</h4><p>Measure CPU generation time, texture creation, fragment cost, memory growth and decoration spikes on the target hardware.</p></section>
+      <section class="card"><h4>2. Refine shader performance when needed</h4><p>Possible options include texture arrays, packed material maps, dominant-layer shortcuts or a smaller active texture set per terrain region.</p></section>
+      <section class="card"><h4>3. Add slope-aware texturing</h4><p>Triplanar mapping can be reserved for steep mountains while the current efficient planar mapping remains on flatter terrain.</p></section>
+      <section class="card"><h4>4. Scale the scheduling model</h4><p>Unity Jobs and Burst, Tasks with bounded concurrency or a thread pool become useful when the number of simultaneous chunk requests increases.</p></section>
+      <section class="card"><h4>5. Reuse runtime resources</h4><p>Pooling decorations and reusing per-chunk meshes, textures or materials can support longer sessions and denser worlds.</p></section>
+      <section class="card"><h4>6. Expand authoring tools</h4><p>Validated ScriptableObjects and a visual biome-range editor would make the existing data-driven workflow even easier to use.</p></section>
+    </div>
 
+    <h3>Texture source and distribution choice</h3>
     <p>
-      One important extension would be the addition of a
-      <strong>moisture map</strong>. Combined with height and temperature, this
-      would allow for a more advanced biome system with greater variation.
-    </p>
-
-    <p>
-      Another improvement would be <strong>biome blending</strong>. The current
-      system uses hard thresholds, which results in harsh visible transitions.
-      Blending between biome types would create smoother and more natural
-      transitions.
-    </p>
-
-    <p>
-      Performance could also be improved further by using techniques such as
-      <strong>GPU-based generation</strong> or <strong>compute shaders</strong>.
-    </p>
-
-    <p>
-      Additionally, rendering optimizations such as
-      <strong>GPU instancing</strong> or <strong>billboards</strong> could
-      reduce the cost of large numbers of objects.
+      The albedo, normal and specular source textures were obtained from <em>Yughues Free Ground Materials</em> by
+      Nobiax / Yughues through the Unity Asset Store. They were selected and recombined through a custom shader rather
+      than redistributed as a new texture pack. The downloadable zip therefore contains project code and shader setup,
+      but users must obtain the original textures through the official Asset Store package.
     </p>
 
     <h3>References</h3>
-
     <ul class="reference-list">
-      <li>
-        Catlike Coding. (n.d.). <em>Unity Jobs tutorial</em>. Retrieved April 6,
-        2026, from
-        <a
-          href="https://catlikecoding.com/unity/tutorials/basics/jobs/"
-          target="_blank"
-        >
-          https://catlikecoding.com/unity/tutorials/basics/jobs/
-        </a>
-      </li>
-
-      <li>
-        Flafla2. (2014, August 9). <em>Adrian's soapbox</em>. Retrieved April 6,
-        2026, from
-        <a
-          href="https://adrianb.io/2014/08/09/perlinnoise.html"
-          target="_blank"
-        >
-          https://adrianb.io/2014/08/09/perlinnoise.html
-        </a>
-      </li>
-
-      <li>
-        GameDev StackExchange. (n.d.).
-        <em>How to not freeze the main thread in Unity</em>. Retrieved April 6,
-        2026, from
-        <a
-          href="https://gamedev.stackexchange.com/questions/113096/how-to-not-freeze-the-main-thread-in-unity"
-          target="_blank"
-        >
-          https://gamedev.stackexchange.com/questions/113096/how-to-not-freeze-the-main-thread-in-unity
-        </a>
-      </li>
-
-      <li>
-        Jdhwilkins. (2025, February 27).
-        <em
-          >Mountains, cliffs, and caves: A comprehensive guide to using Perlin
-          noise for procedural generation</em
-        >. Retrieved March 18, 2026, from
-        <a
-          href="https://www.jdhwilkins.com/mountains-cliffs-and-caves-a-comprehensive-guide-to-using-perlin-noise-for-procedural-generation"
-          target="_blank"
-        >
-          https://www.jdhwilkins.com/mountains-cliffs-and-caves-a-comprehensive-guide-to-using-perlin-noise-for-procedural-generation
-        </a>
-      </li>
-
-      <li>
-        Lague, S. (2016). <em>Procedural landmass generation</em> [YouTube
-        series]. Retrieved April 6, 2026, from
-        <a
-          href="https://www.youtube.com/playlist?list=PLFt_AvWsXl0eBW2EIBtI_sxmDtSgZBxB3"
-          target="_blank"
-        >
-          https://www.youtube.com/playlist?list=PLFt_AvWsXl0eBW2EIBtI_sxmDtSgZBxB3
-        </a>
-      </li>
-
-      <li>
-        Microsoft. (n.d.). <em>Using threads and threading</em>. Retrieved April
-        6, 2026, from
-        <a
-          href="https://learn.microsoft.com/en-us/dotnet/standard/threading/using-threads-and-threading"
-          target="_blank"
-        >
-          https://learn.microsoft.com/en-us/dotnet/standard/threading/using-threads-and-threading
-        </a>
-      </li>
-
-      <li>
-        Patel, A. (2025, August 9). <em>Making maps with noise functions</em>.
-        Red Blob Games. Retrieved March 18, 2026, from
-        <a
-          href="https://www.redblobgames.com/maps/terrain-from-noise/"
-          target="_blank"
-        >
-          https://www.redblobgames.com/maps/terrain-from-noise/
-        </a>
-      </li>
-
-      <li>
-        Patel, A. (2025, October 13).
-        <em>Polygonal map generation for games</em>. Retrieved March 18, 2026,
-        from
-        <a
-          href="http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/"
-          target="_blank"
-        >
-          http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/
-        </a>
-      </li>
-
-      <li>
-        Perlin, K. (1985). <em>An image synthesizer</em>. Computer Graphics
-        (ACM), San Francisco.
-      </li>
-
-      <li>
-        Unity Technologies. (n.d.). <em>Job system overview</em>. Retrieved
-        April 6, 2026, from
-        <a
-          href="https://docs.unity3d.com/Manual/job-system-overview.html"
-          target="_blank"
-        >
-          https://docs.unity3d.com/Manual/job-system-overview.html
-        </a>
-      </li>
-
-      <li>
-        Vivo, P. G., &amp; Lowe, J. (2015). <em>The Book of Shaders</em>.
-        Retrieved April 6, 2026, from
-        <a href="https://thebookofshaders.com/13/" target="_blank">
-          https://thebookofshaders.com/13/
-        </a>
-      </li>
-
-      <li>
-        Zucconi, A. (2022, June 5). <em>The world generation of Minecraft</em>.
-        Retrieved March 11, 2026, from
-        <a
-          href="https://www.alanzucconi.com/2022/06/05/minecraft-world-generation/"
-          target="_blank"
-        >
-          https://www.alanzucconi.com/2022/06/05/minecraft-world-generation/
-        </a>
-      </li>
+      <li>Perlin, K. (1985). <em>An Image Synthesizer</em>. ACM SIGGRAPH Computer Graphics, 19(3), 287–296. <a href="https://doi.org/10.1145/325334.325247" target="_blank" rel="noreferrer">DOI</a>.</li>
+      <li>Unity Technologies. <em>Writing custom shaders in the Universal Render Pipeline</em>. <a href="https://docs.unity3d.com/6000.0/Documentation/Manual/urp/writing-custom-shaders-urp.html" target="_blank" rel="noreferrer">Unity Manual</a>.</li>
+      <li>Unity Technologies. <em>Basic structure of a custom URP shader</em>. <a href="https://docs.unity3d.com/6000.0/Documentation/Manual/urp/writing-shaders-urp-basic-unlit-structure.html" target="_blank" rel="noreferrer">Unity Manual</a>.</li>
+      <li>Unity Technologies. <em>Draw a texture in a shader in URP</em>. <a href="https://docs.unity3d.com/6000.1/Documentation/Manual/urp/writing-shaders-urp-unlit-texture.html" target="_blank" rel="noreferrer">Unity Manual</a>.</li>
+      <li>Unity Technologies. <em>Properties block reference in ShaderLab</em>. <a href="https://docs.unity3d.com/6000.3/Documentation/Manual/SL-Properties.html" target="_blank" rel="noreferrer">Unity Manual</a>.</li>
+      <li>Unity Technologies. <em>Use lighting in a custom URP shader</em>. <a href="https://docs.unity3d.com/6000.0/Documentation/Manual/urp/use-built-in-shader-methods-lighting.html" target="_blank" rel="noreferrer">Unity Manual</a>.</li>
+      <li>Unity Technologies. <em>Make a URP shader compatible with the SRP Batcher</em>. <a href="https://docs.unity3d.com/6000.0/Documentation/Manual/urp/shaders-in-universalrp-srp-batcher.html" target="_blank" rel="noreferrer">Unity Manual</a>.</li>
+      <li>Unity Technologies. <em>Special folder names: Editor</em>. <a href="https://docs.unity3d.com/2023.2/Documentation/Manual/SpecialFolders.html" target="_blank" rel="noreferrer">Unity Manual</a>.</li>
+      <li>Nobiax / Yughues. <em>Yughues Free Ground Materials</em>. <a href="https://assetstore.unity.com/packages/2d/textures-materials/nature/yughues-free-ground-materials-13001" target="_blank" rel="noreferrer">Unity Asset Store</a>.</li>
+      <li>Unity Technologies. <em>Asset Store Terms of Service and EULA</em>. <a href="https://unity.com/legal/as-terms" target="_blank" rel="noreferrer">Unity Legal</a>.</li>
+      <li>Unity Support. <em>Can I use assets from the Asset Store with other engines?</em> <a href="https://support.unity.com/hc/en-us/articles/34387186019988-Can-I-use-assets-from-the-Asset-Store-with-other-engines" target="_blank" rel="noreferrer">Unity Support</a>.</li>
+      <li>Unity Technologies. <em>Introduction to level of detail</em>. <a href="https://docs.unity3d.com/Manual/LevelOfDetail.html" target="_blank" rel="noreferrer">Unity Manual</a>.</li>
+      <li>Microsoft. <em>Threads and threading</em>. <a href="https://learn.microsoft.com/en-us/dotnet/standard/threading/threads-and-threading" target="_blank" rel="noreferrer">Microsoft Learn</a>.</li>
+      <li>Patel, A. <em>Making maps with noise functions</em>. <a href="https://www.redblobgames.com/maps/terrain-from-noise/" target="_blank" rel="noreferrer">Red Blob Games</a>.</li>
+      <li>Lague, S. <em>Procedural Landmass Generation</em>. <a href="https://www.youtube.com/playlist?list=PLFt_AvWsXl0eBW2EIBtI_sxmDtSgZBxB3" target="_blank" rel="noreferrer">YouTube series</a>.</li>
     </ul>
-  </div>
+  </article>
 </details>

@@ -1,56 +1,124 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Project Development</title>
-    <link rel="stylesheet" href="styles/main.css" />
-  </head>
-  <body>
-    <header class="site-header">
-      <h1>Procedural World Development</h1>
-      <p>Author: <strong>Floris Bieling</strong></p>
-      <p>Date: <strong>06-04-2026</strong></p>
-    </header>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A technical design case study of a procedural terrain system built in Unity with coherent noise, climate maps, biome control maps, a custom URP shader, decorations, LOD and background generation.">
+  <meta name="theme-color" content="#0b1220">
+  <title>Procedural Terrain Generation in Unity</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
 
-    <main class="container">
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="#top" aria-label="Back to the top">
+        <span class="brand-mark" aria-hidden="true">PT</span>
+        <span>
+          <strong>Procedural Terrain</strong>
+          <small>Unity research &amp; development</small>
+        </span>
+      </a>
 
-      <section id="intro" class="step-container"></section>
+      <button class="mobile-menu-button" type="button" aria-expanded="false" aria-controls="site-navigation">
+        Menu
+      </button>
 
-      <section class="step-navigation">
-        <h2>Steps</h2>
-        <nav class="step-links">
-          <a href="#intro">Introduction</a>
-          <a href="#step1">Step 1: Perlin Noise</a>
-          <a href="#step2">Step 2: More Noise Parameters</a>
-          <a href="#step3">Step 3: From Noise to Terrain Shapes</a>
-          <a href="#step4">Step 4: Combining Height and Temperature</a>
-          <a href="#step5">Step 5: From 2D Data to Unity World Generation</a>
-          <a href="#step6">Step 6: Performance Problems</a>
-          <a href="#step7">Step 7: Performance Techniques</a>
-          <a href="#step8">Step 8: Multithreading in Unity</a>
-          <a href="#implementation">How to implement in Unity</a>
-          <a href="#conclusion">Conclusion</a>
-        </nav>
-      </section>
+      <nav id="site-navigation" class="site-navigation" aria-label="Main navigation">
+        <a href="#intro">Overview</a>
+        <a href="#step4">Climate</a>
+        <a href="#step6">Control maps</a>
+        <a href="#step7">Shader</a>
+        <a href="#step9">Architecture</a>
+        <a href="#implementation">Implementation</a>
+      </nav>
+    </div>
+  </header>
 
-      <section id="step1" class="step-container"></section>
-      <section id="step2" class="step-container"></section>
-      <section id="step3" class="step-container"></section>
-      <section id="step4" class="step-container"></section>
-      <section id="step5" class="step-container"></section>
-      <section id="step6" class="step-container"></section>
-      <section id="step7" class="step-container"></section>
-      <section id="step8" class="step-container"></section>
-      <section id="implementation" class="step-container"></section>
-      <section id="conclusion" class="step-container"></section>
-    </main>
+  <main id="main-content">
+    <section id="top" class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">Technical design case study</p>
+        <h1 id="hero-title">From coherent noise to an endless textured world</h1>
+        <p class="hero-lead">
+          This page explains what the terrain system does, which alternatives were available and why the implemented
+          choices fit this project. It covers map generation, biome rules, control maps, the custom URP shader,
+          snow, decorations, chunk streaming and refactoring.
+        </p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#intro">Read the case study</a>
+          <a class="button button-secondary" href="downloads/ProceduralTerrainCompletePackage.zip" download>Download complete package</a>
+        </div>
+        <dl class="hero-facts">
+          <div><dt>Data layers</dt><dd>Height, temperature, moisture</dd></div>
+          <div><dt>Shader inputs</dt><dd>7 biome weights across 2 control maps</dd></div>
+          <div><dt>Status</dt><dd>Working modular research prototype</dd></div>
+        </dl>
+      </div>
 
-    <script src="scripts/main.js"></script>
-    <script src="scripts/lib/perlin.js"></script>
-    <script src="scripts/steps/step1.js"></script>
-    <script src="scripts/steps/step2.js"></script>
-    <script src="scripts/steps/step3.js"></script>
-    <script src="scripts/steps/step4.js"></script>
-  </body>
+      <div class="hero-media project-image" data-src="images/final-world-overview.png" data-alt="Final procedurally generated Unity terrain with multiple textured biomes">
+        <div class="image-placeholder">
+          <span>Recommended project screenshot</span>
+          <strong>images/final-world-overview.png</strong>
+          <small>Use a wide screenshot of the final world.</small>
+        </div>
+      </div>
+    </section>
+
+    <div class="page-layout">
+      <aside class="table-of-contents" aria-label="Page contents">
+        <p class="toc-title">Contents</p>
+        <a href="#intro">Introduction</a>
+        <a href="#step1">1. Perlin noise</a>
+        <a href="#step2">2. Fractal noise</a>
+        <a href="#step3">3. Height to terrain</a>
+        <a href="#step4">4. Climate maps</a>
+        <a href="#step5">5. Biome selection</a>
+        <a href="#step6">6. Control maps</a>
+        <a href="#step7">7. Shader &amp; materials</a>
+        <a href="#step8">8. Snow &amp; decorations</a>
+        <a href="#step9">9. Runtime architecture</a>
+        <a href="#implementation">Implementation</a>
+        <a href="#conclusion">Conclusion</a>
+      </aside>
+
+      <div class="content-column">
+        <div class="page-tools" aria-label="Page controls">
+          <button id="expandAllButton" class="text-button" type="button">Expand all sections</button>
+          <button id="collapseAllButton" class="text-button" type="button">Collapse all sections</button>
+        </div>
+
+        <section id="intro" class="content-slot" data-fragment="steps/intro.html" aria-live="polite"></section>
+        <section id="step1" class="content-slot" data-fragment="steps/step1.html" aria-live="polite"></section>
+        <section id="step2" class="content-slot" data-fragment="steps/step2.html" aria-live="polite"></section>
+        <section id="step3" class="content-slot" data-fragment="steps/step3.html" aria-live="polite"></section>
+        <section id="step4" class="content-slot" data-fragment="steps/step4.html" aria-live="polite"></section>
+        <section id="step5" class="content-slot" data-fragment="steps/step5.html" aria-live="polite"></section>
+        <section id="step6" class="content-slot" data-fragment="steps/step6.html" aria-live="polite"></section>
+        <section id="step7" class="content-slot" data-fragment="steps/step7.html" aria-live="polite"></section>
+        <section id="step8" class="content-slot" data-fragment="steps/step8.html" aria-live="polite"></section>
+        <section id="step9" class="content-slot" data-fragment="steps/step9.html" aria-live="polite"></section>
+        <section id="implementation" class="content-slot" data-fragment="steps/implementation.html" aria-live="polite"></section>
+        <section id="conclusion" class="content-slot" data-fragment="steps/conclusion.html" aria-live="polite"></section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>Procedural Terrain Generation in Unity</p>
+    <p>Last documentation revision: <time datetime="2026-06-18">18 June 2026</time></p>
+  </footer>
+
+  <script src="scripts/lib/perlin.js"></script>
+  <script src="scripts/lib/terrain-demo.js"></script>
+  <script src="scripts/main.js"></script>
+  <script src="scripts/steps/step1.js"></script>
+  <script src="scripts/steps/step2.js"></script>
+  <script src="scripts/steps/step3.js"></script>
+  <script src="scripts/steps/step4.js"></script>
+  <script src="scripts/steps/step5.js"></script>
+  <script src="scripts/steps/step6.js"></script>
+  <script src="scripts/steps/step8.js"></script>
+</body>
 </html>

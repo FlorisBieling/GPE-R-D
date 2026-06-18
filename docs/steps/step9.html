@@ -1,0 +1,138 @@
+<details class="step-wrapper" open>
+  <summary class="step-summary">Step 9: Endless terrain, LOD, threading and refactoring</summary>
+  <article class="step-card">
+    <p class="section-kicker">Runtime architecture</p>
+    <p class="lead">
+      The final step is not another visual feature. It is the structure that allows all earlier systems to run while
+      the player moves through an endless world.
+    </p>
+
+    <h3>Chunk streaming</h3>
+    <p>
+      <code>EndlessTerrain</code> converts the viewer position into chunk coordinates. Existing chunks are updated,
+      missing chunks are created, and chunks outside the maximum view distance are hidden. The expensive visibility
+      scan only runs after the viewer has moved beyond a configured threshold.
+    </p>
+
+    <h3>Level of detail</h3>
+    <p>
+      Each visible chunk chooses a mesh LOD from its distance to the viewer. Near chunks use a dense mesh and are
+      allowed to show decorations. Distant chunks use larger vertex steps and keep decorations disabled.
+    </p>
+
+    <div class="code-block"><pre><code>int meshSimplificationIncrement = levelOfDetail == 0
+    ? 1
+    : levelOfDetail * 2;
+
+int verticesPerLine = (width - 1) / meshSimplificationIncrement + 1;</code></pre></div>
+
+    <h3>Background calculation and main-thread handoff</h3>
+    <p>
+      Map data, mesh data and decoration data are calculated on worker threads. The result is placed in a locked queue.
+      <code>MapGenerator.Update</code> drains those queues and invokes callbacks on Unity's main thread, where textures,
+      meshes and GameObjects can be safely created or assigned.
+    </p>
+
+    <div class="architecture-flow" aria-label="Background generation workflow">
+      <div class="architecture-node">Request</div>
+      <div class="architecture-node">Worker thread</div>
+      <div class="architecture-node">Locked queue</div>
+      <div class="architecture-node">Update callback</div>
+      <div class="architecture-node">Unity object</div>
+    </div>
+
+    <h3>Why <code>MapGenerator</code> was split</h3>
+    <p>
+      The old class combined configuration, biome rules, control maps, snow, decorations, preview logic and threading.
+      The current version keeps <code>MapGenerator</code> as the coordinator and moves specialised calculations into
+      focused classes.
+    </p>
+
+    <div class="file-grid">
+      <section class="file-card"><h4>MapGenerator.cs</h4><p>Settings, map requests, editor preview and thread-result queues.</p></section>
+      <section class="file-card"><h4>BiomeGenerator.cs</h4><p>Biome selection, fallback logic and preview-color smoothing.</p></section>
+      <section class="file-card"><h4>BiomeControlMapGenerator.cs</h4><p>Texture weights, boundary noise, patch noise and snow masking.</p></section>
+      <section class="file-card"><h4>DecorationGenerator.cs</h4><p>Deterministic spawn-data generation and minimum-distance checks.</p></section>
+      <section class="file-card"><h4>TerrainData.cs</h4><p>Shared data structures and the biome texture enum.</p></section>
+      <section class="file-card"><h4>EndlessTerrain.cs</h4><p>Chunk lifetime, LOD selection, material assignment and gradual spawning.</p></section>
+    </div>
+
+
+    <h3>Current Unity project architecture</h3>
+    <p>
+      The Project-window screenshots show a clear top-level separation between materials, scripts and the scene.
+      The downloadable version develops that idea further by placing editor tooling, runtime coordination, generation
+      code, preview code and shared data in folders that match their responsibilities.
+    </p>
+
+    <div class="architecture-gallery">
+      <div class="project-image" data-src="images/unity-architecture-root.png" data-alt="Unity Assets Perlin root folder"><div class="image-placeholder"><span>Use supplied root-folder screenshot</span><strong>images/unity-architecture-root.png</strong><small>Materials, Scripts and the Perlin scene.</small></div></div>
+      <div class="project-image" data-src="images/unity-architecture-materials.png" data-alt="Unity Materials folder"><div class="image-placeholder"><span>Use supplied Materials screenshot</span><strong>images/unity-architecture-materials.png</strong><small>Material, shader and editor assignment utility.</small></div></div>
+      <div class="project-image" data-src="images/unity-architecture-scripts.png" data-alt="Unity Scripts folder"><div class="image-placeholder"><span>Use supplied Scripts screenshot</span><strong>images/unity-architecture-scripts.png</strong><small>Terrain scripts and Camera folder.</small></div></div>
+      <div class="project-image" data-src="images/unity-architecture-camera.png" data-alt="Unity camera scripts folder"><div class="image-placeholder"><span>Use supplied Camera screenshot</span><strong>images/unity-architecture-camera.png</strong><small>Movement and height-control scripts.</small></div></div>
+    </div>
+
+    <h3>Why this folder structure was chosen</h3>
+    <div class="evaluation-grid">
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with one flat Assets folder</p><h4>Files are grouped by responsibility</h4><p>Materials, editor tools, generation code, runtime code and shared data can be located without searching through unrelated assets.</p></section>
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Unity-specific choice</p><h4>Editor-only code has a clear build boundary</h4><p>The texture-assignment utility belongs in <code>Editor</code> because it uses <code>UnityEditor</code> and <code>AssetDatabase</code>, while runtime builds only need the resulting material.</p></section>
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Maintenance choice</p><h4>Filenames match their MonoBehaviour classes</h4><p><code>TopDownCameraMovement.cs</code> and <code>CameraHeightControl.cs</code> are easier to find and attach than generic or mismatched filenames.</p></section>
+      <section class="evaluation-card evaluation-limit"><p class="evaluation-label">When the project grows further</p><h4>Assembly definitions could make boundaries even stronger</h4><p>The current folder structure is sufficient for this project. Separate assemblies become useful later when compile times, package reuse or stricter dependencies matter.</p></section>
+    </div>
+
+    <h3>Camera helper scripts</h3>
+    <p>
+      <code>TopDownCameraMovement</code> reads the legacy Horizontal and Vertical axes, moves along the camera's
+      flattened forward/right directions, and multiplies speed while Left Shift is held. <code>CameraHeightControl</code>
+      moves the viewer vertically with M and N and clamps the height between 5 and 800 Unity units.
+    </p>
+    <div class="evaluation-grid">
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with a complete player controller</p><h4>Fast free-camera inspection</h4><p>The small helper scripts are enough to cross chunk borders, inspect LOD changes and change viewing height without adding unrelated gameplay systems.</p></section>
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Chosen for the research scene</p><h4>Simple controls keep testing reproducible</h4><p>Fixed movement axes and height keys make it quick to repeat the same terrain checks during development.</p></section>
+      <section class="evaluation-card evaluation-limit"><p class="evaluation-label">Optional package upgrade</p><h4>Expose bindings through the Input System</h4><p>A reusable public package could make the controls configurable. For the current research scene, the smaller legacy-input solution is appropriate.</p></section>
+    </div>
+
+    <h3>Recommended project structure</h3>
+    <div class="code-block"><pre><code>Assets/Perlin/
+├── Editor/
+│   └── AssignExactYFGMBiomeTextures_Final.cs
+├── Materials/
+│   ├── MaterialProceduralTerrain.mat
+│   └── ProceduralBiomeTexturesURP_Final.shader
+├── Scripts/
+│   ├── Camera/
+│   │   ├── CameraHeightControl.cs
+│   │   └── TopDownCameraMovement.cs
+│   ├── Data/
+│   │   └── TerrainData.cs
+│   ├── Generation/
+│   │   ├── BiomeControlMapGenerator.cs
+│   │   ├── BiomeGenerator.cs
+│   │   ├── DecorationGenerator.cs
+│   │   ├── MeshGenerator.cs
+│   │   ├── Noise.cs
+│   │   └── TextureGenerator.cs
+│   ├── Preview/
+│   │   └── MapDisplay.cs
+│   └── Runtime/
+│       ├── EndlessTerrain.cs
+│       └── MapGenerator.cs
+└── Perlin.unity</code></pre></div>
+
+    <h3>Why the runtime architecture is a good fit</h3>
+    <div class="evaluation-grid">
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Chunk streaming</p><h4>Work follows the viewer instead of the theoretical world size</h4><p>Only nearby chunks need active meshes and materials, which makes an apparently endless world practical.</p></section>
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Level of detail</p><h4>Mesh complexity is spent where it is visible</h4><p>Near chunks retain detail while distant chunks use larger vertex steps, reducing geometry cost without changing the underlying world data.</p></section>
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Thread handoff</p><h4>Data work is separated from Unity object work</h4><p>Worker threads prepare maps and mesh data, while locked queues return results to the main thread where Unity APIs are safe to use.</p></section>
+      <section class="evaluation-card evaluation-limit"><p class="evaluation-label">Next scalability step</p><h4>Use a bounded job scheduler when request volume grows</h4><p>Raw threads are easy to understand and suitable for the current project. Unity Jobs, Tasks or a thread pool would become preferable if many chunks request work simultaneously.</p></section>
+    </div>
+
+    <div class="project-image" data-src="images/runtime-chunks-lod.png" data-alt="Unity scene view showing terrain chunks and several levels of detail">
+      <div class="image-placeholder">
+        <span>Recommended architecture evidence</span>
+        <strong>images/runtime-chunks-lod.png</strong>
+        <small>Enable wireframe or gizmos so individual chunks and LOD differences are visible.</small>
+      </div>
+    </div>
+  </article>
+</details>

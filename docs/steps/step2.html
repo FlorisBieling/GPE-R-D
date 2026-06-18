@@ -1,245 +1,87 @@
 <details class="step-wrapper" open>
-  <summary class="step-summary">Step 2: More Noise Parameters</summary>
-
-  <div class="step-card">
-    <h3>Goal of This Step</h3>
-
-    <p>
-      The first step introduced Perlin noise as a structured alternative to pure
-      randomness. While that already produced smoother and more usable data, a
-      single layer of noise was still limited. The resulting map could show
-      broad variation, but it lacked the complexity needed for more believable
-      terrain.
+  <summary class="step-summary">Step 2: Fractal noise, octaves and normalization</summary>
+  <article class="step-card">
+    <p class="section-kicker">More structure</p>
+    <p class="lead">
+      One noise layer creates broad smooth shapes. The current generator combines several layers so large landforms
+      and smaller details can exist in the same map.
     </p>
 
-    <p>
-      This step continues answering <strong>sub question 1</strong> by focusing
-      on how the main Perlin noise parameters influence the generated result.
-      In particular, it explores how <strong>octaves</strong>,
-      <strong>persistence</strong>, and <strong>lacunarity</strong> change the
-      balance between large shapes and small details.
-    </p>
+    <div class="card-grid">
+      <section class="card"><h4>Octaves</h4><p>The number of noise layers that are added together.</p></section>
+      <section class="card"><h4>Persistence</h4><p>How much amplitude each following layer keeps.</p></section>
+      <section class="card"><h4>Lacunarity</h4><p>How quickly each following layer increases in frequency.</p></section>
+      <section class="card"><h4>Normalization</h4><p>Converts the accumulated result into a usable map range.</p></section>
+    </div>
 
-    <h3>Why a Single Noise Layer Was Not Enough</h3>
-
-    <p>
-      A single layer of Perlin noise can create smooth variation, but terrain in
-      games usually needs more than one level of structure. Real landscapes are
-      not made up of only broad hills or only tiny details. They contain large
-      overall shapes, medium variation, and smaller rough features at the same
-      time.
-    </p>
-
-    <p>
-      Because of that, using only one layer of noise made the terrain feel too
-      simple. It could provide a base pattern, but not enough richness to be a
-      strong foundation for a larger terrain system.
-    </p>
-
-    <p>
-      The solution is to combine multiple layers of noise. Instead of generating
-      one pattern, the system generates several patterns at different scales and
-      strengths, and blends them together into one final result.
-    </p>
-
-    <h3>Why This Method Was Chosen</h3>
-
-    <p>
-      This layered approach was chosen because it keeps the strengths of Perlin
-      noise while making the result much more flexible. It allows the system to
-      preserve large terrain forms while also adding smaller features on top.
-    </p>
-
-    <p>
-      Other methods could also increase complexity, but this approach fits well
-      with the rest of the project because it stays within the same procedural
-      model. Instead of switching to a completely different generation method,
-      the original Perlin noise system is extended in a controlled way.
-    </p>
-
-    <h3>What These Parameters Do</h3>
-
-    <h4>Octaves</h4>
-
-    <p>
-      Octaves determine how many layers of noise are combined. The first octave
-      creates the broadest shapes, while each additional octave adds a new layer
-      of smaller detail. Increasing the number of octaves therefore makes the
-      terrain richer and more varied.
-    </p>
-
-    <p>
-      In practice, this means that low octave values produce smoother and
-      simpler maps, while higher octave values create terrain with more visible
-      structure.
-    </p>
-
-    <h4>Persistence</h4>
-
-    <p>
-      Persistence controls how much influence each new octave has compared to
-      the previous one. If persistence is low, the higher octaves contribute
-      only a small amount, so the large shapes remain dominant. If persistence
-      is high, the smaller details stay much more visible.
-    </p>
-
-    <p>
-      This means persistence directly affects how rough or smooth the final
-      terrain feels.
-    </p>
-
-    <h4>Lacunarity</h4>
-
-    <p>
-      Lacunarity controls how quickly the frequency increases for each
-      additional octave. In other words, it determines how much smaller and more
-      compressed each new layer becomes.
-    </p>
-
-    <p>
-      A lower lacunarity keeps the layers more similar, while a higher
-      lacunarity creates a stronger contrast between broad shapes and fine
-      details.
-    </p>
-
-    <h3>How These Parameters Work Together</h3>
-
-    <p>
-      These parameters are closely connected. Octaves determine how many layers
-      are added, persistence determines how visible those extra layers remain,
-      and lacunarity determines how different in scale those layers become.
-    </p>
-
-    <p>
-      Together, they allow one procedural system to produce very different
-      terrain styles. The result can range from smooth rolling landscapes to
-      rougher and more broken terrain, depending on how the parameters are
-      combined.
-    </p>
-
-    <p>
-      This is important because it shows that Perlin noise is not only useful as
-      a single function, but also as a flexible system that can be tuned for
-      different kinds of worlds.
-    </p>
-
-    <h3>How This Works in Unity</h3>
-
-    <p>
-      In Unity, this is done by looping through several octaves of noise for
-      every position in the map. Each octave samples the noise function again,
-      but with a different frequency and amplitude.
-    </p>
-
-    <div class="code-block">
-      <pre><code>amplitude = 1;
-frequency = 1;
-float noiseHeight = 0;
-
-for (int i = 0; i < octaves; i++)
+    <h3>Current implementation</h3>
+    <div class="code-block"><pre><code>for (int i = 0; i &lt; octaves; i++)
 {
-    float sampleX = (x - halfWidth + octaveOffsets[i].x) / scale * frequency;
-    float sampleY = (y - halfHeight + octaveOffsets[i].y) / scale * frequency;
-
-    float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
+    float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2f - 1f;
     noiseHeight += perlinValue * amplitude;
 
     amplitude *= persistance;
     frequency *= lacunarity;
-}</code></pre>
-    </div>
-
-    <h3>What This Code Does</h3>
+}</code></pre></div>
 
     <p>
-      The loop runs once for every octave. Each time, the system samples a new
-      layer of Perlin noise and adds it to the total height value. At the start,
-      both amplitude and frequency are set to 1. After each octave, amplitude
-      is multiplied by persistence and frequency is multiplied by lacunarity.
+      The first octave defines the largest shapes. Later octaves sample at a higher frequency and normally use a
+      smaller amplitude. This is why increasing octaves adds detail without completely replacing the base terrain.
     </p>
 
+    <h3>Local and global normalization</h3>
     <p>
-      This means the first octave has the strongest influence and represents the
-      broad shape of the terrain, while later octaves gradually add smaller
-      details. Because of this, the final value is no longer based on one smooth
-      pattern, but on a combination of multiple layers.
-    </p>
-
-    <p>
-      This directly answers the first sub question: these parameters do not just
-      exist as extra settings, but fundamentally control how much detail,
-      roughness, and variation the terrain will contain.
-    </p>
-
-    <h3>Interactive Demo</h3>
-
-    <p>
-      The demo below shows how these parameters influence the generated map. By
-      changing the values, it becomes possible to see how one base noise pattern
-      can be transformed into very different results.
+      <strong>Local normalization</strong> stretches each generated chunk between its own minimum and maximum.
+      It is useful for previews, but neighbouring chunks can interpret identical raw values differently.
+      <strong>Global normalization</strong> uses a theoretical maximum amplitude and is therefore more suitable
+      when continuity between independently generated chunks matters.
     </p>
 
     <details class="demo-wrapper" open>
-      <summary class="demo-summary">Show demo</summary>
-
+      <summary class="demo-summary">Interactive fractal noise demo</summary>
       <div class="demo-content">
         <div class="demo-layout">
           <div class="controls">
-            <label>Noise Scale: <span id="scale2Value">20</span></label>
-            <input id="noiseScale2" type="range" min="5" max="200" value="20" />
-
-            <label>Octaves: <span id="octavesValue">1</span></label>
-            <input id="octaves" type="range" min="1" max="8" value="1" />
-
-            <label>Persistence: <span id="persistenceValue">0.50</span></label>
-            <input
-              id="persistence"
-              type="range"
-              min="0.1"
-              max="1"
-              step="0.05"
-              value="0.5"
-            />
-
-            <label>Lacunarity: <span id="lacunarityValue">2.00</span></label>
-            <input
-              id="lacunarity"
-              type="range"
-              min="1"
-              max="4"
-              step="0.1"
-              value="2"
-            />
-
-            <p>
-              Increasing octaves adds more layers of detail. Persistence changes
-              how strong those extra layers remain, while lacunarity changes how
-              quickly those layers become smaller.
-            </p>
-
-            <button id="generateNoiseButton2">Generate Map</button>
+            <div class="control-row">
+              <label for="noiseScale2">Scale <span id="scale2Value" class="control-value">70</span></label>
+              <input id="noiseScale2" type="range" min="8" max="220" value="70">
+            </div>
+            <div class="control-row">
+              <label for="octaves2">Octaves <span id="octaves2Value" class="control-value">4</span></label>
+              <input id="octaves2" type="range" min="1" max="8" value="4">
+            </div>
+            <div class="control-row">
+              <label for="persistence2">Persistence <span id="persistence2Value" class="control-value">0.50</span></label>
+              <input id="persistence2" type="range" min="0.1" max="0.9" step="0.05" value="0.5">
+            </div>
+            <div class="control-row">
+              <label for="lacunarity2">Lacunarity <span id="lacunarity2Value" class="control-value">2.00</span></label>
+              <input id="lacunarity2" type="range" min="1" max="4" step="0.1" value="2">
+            </div>
+            <div class="control-row">
+              <label for="noiseSeed2">Seed <span id="seed2Value" class="control-value">12</span></label>
+              <input id="noiseSeed2" type="range" min="0" max="100" value="12">
+            </div>
           </div>
-
           <div class="preview">
-            <canvas id="noiseCanvas2" width="500" height="500"></canvas>
+            <canvas id="noiseCanvas2" class="demo-canvas" width="320" height="320" aria-label="Fractal Perlin noise preview"></canvas>
           </div>
         </div>
       </div>
     </details>
 
-    <h3>What This Step Adds to the System</h3>
+    <div class="callout">
+      <strong>Implementation accuracy:</strong> the public field <code>redistributionPower</code> is still present in
+      <code>MapGenerator.cs</code>, but the current generation method does not apply it. The documentation therefore
+      treats octaves, persistence, lacunarity and normalization as the active controls.
+    </div>
 
-    <p>
-      This step expands the procedural system from a simple proof of concept
-      into something much more suitable for terrain generation. Instead of
-      producing only one smooth pattern, the system can now represent both large
-      structures and smaller variation within the same map.
-    </p>
-
-    <p>
-      That makes it a much stronger base for the next step, where the noise
-      values are no longer shown only as grayscale, but are interpreted as
-      meaningful terrain categories such as water, land, and mountains.
-    </p>
-  </div>
+    <h3>Why layered Perlin noise was chosen</h3>
+    <div class="evaluation-grid">
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with one noise layer</p><h4>It combines large shapes and fine detail</h4><p>The first octave defines the landmass while later octaves add smaller structure. This gives a richer result without replacing the original generation method.</p></section>
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with mixing several unrelated algorithms</p><h4>The controls remain consistent</h4><p>Every layer uses the same sampling model, so scale, persistence and lacunarity remain understandable and can be tuned together in the Inspector.</p></section>
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with adding geometry detail later</p><h4>The detail already exists in the source data</h4><p>Biome rules, mesh generation and previews all read the same detailed map, which keeps the pipeline coherent.</p></section>
+      <section class="evaluation-card evaluation-limit"><p class="evaluation-label">Tuning consideration</p><h4>More detail should remain purposeful</h4><p>Very high octave counts or persistence values can add work without improving the visible result. The chosen settings should therefore be judged at the actual mesh resolution and LOD distances.</p></section>
+    </div>
+  </article>
 </details>

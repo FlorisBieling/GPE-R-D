@@ -1,99 +1,87 @@
 <details class="step-wrapper" open>
-  <summary class="step-summary">Introduction</summary>
-
-  <div class="step-card">
-
-    <!-- SUMMARY / ABSTRACT -->
-    <h3>Overview</h3>
-
-    <p>
-      This project explores how procedural terrain can be generated using Perlin noise in Unity,
-      and how such a system can be optimized for real-time use. Starting from simple noise values,
-      the system is gradually extended into a full terrain generation pipeline that includes biome
-      creation, object placement, and performance optimizations.
+  <summary class="step-summary">Introduction: what the current system actually is</summary>
+  <article class="step-card">
+    <p class="section-kicker">Project overview</p>
+    <p class="lead">
+      This project is a complete procedural-terrain pipeline in which noise generation, biome classification,
+      texture blending, chunk streaming and decoration placement work together. The value of the system is not only
+      that it produces a world, but that each technical choice has a clear role and can be adjusted independently.
     </p>
 
-    <p>
-      Throughout this article, multiple aspects are covered:
-      how Perlin noise works, how it can be used to generate structured terrain, how multiple data
-      layers can be combined into biomes, and which techniques are required to keep the system
-      performant when scaling to larger worlds.
-    </p>
+    <div class="metric-grid">
+      <div class="metric-card"><strong>3</strong><span>continuous world-data maps</span></div>
+      <div class="metric-card"><strong>7</strong><span>biome texture channels</span></div>
+      <div class="metric-card"><strong>13</strong><span>C# scripts including camera and editor tooling</span></div>
+    </div>
 
-    <p>
-      The final result is a reusable procedural generation system that can be used inside Unity
-      projects, for example as part of a game or as a tool that could be shared on the Unity Asset Store.
-    </p>
-
-    <!-- IMAGES -->
-    <h3>Final Result</h3>
-
-    <p>
-      Below are examples of the final generated terrain and biome system.
-    </p>
-
-    <div class="image-row">
-      <img src="images/result1.png" alt="Generated terrain example 1">
-      <img src="images/result2.png" alt="Generated terrain example 2">
-      <img src="images/result3.png" alt="Generated terrain example 3">
+    <h3>The complete pipeline</h3>
+    <div class="architecture-flow" aria-label="Terrain generation pipeline">
+      <div class="architecture-node">Noise maps</div>
+      <div class="architecture-node">Biome rules</div>
+      <div class="architecture-node">Control maps</div>
+      <div class="architecture-node">URP shader</div>
+      <div class="architecture-node">Chunks &amp; objects</div>
     </div>
 
     <p>
-      These images show how height and temperature data are combined to create varied terrain,
-      including oceans, plains, and different types of land.
+      Height controls mesh elevation. Temperature and moisture add climate variation. The three values are evaluated
+      against configured biome ranges, while a separate control-map generator calculates smooth texture weights.
+      The custom URP shader then blends albedo, normal and specular textures in world space.
     </p>
 
-    <!-- PROBLEM -->
-    <h3>Problem</h3>
+    <h3>Why the overall architecture is a good fit</h3>
+    <div class="evaluation-grid">
+      <section class="evaluation-card evaluation-good">
+        <p class="evaluation-label">Chosen approach</p>
+        <h4>One dataset drives several systems</h4>
+        <p>The same height, temperature and moisture data controls mesh shape, biome logic, texture weights and decoration rules. This avoids systems contradicting each other.</p>
+      </section>
+      <section class="evaluation-card evaluation-good">
+        <p class="evaluation-label">Chosen approach</p>
+        <h4>Gameplay logic and rendering are separated</h4>
+        <p>A dominant biome is useful for rules and object placement, while control-map weights are better for gradual visual transitions. Each representation is used where it is strongest.</p>
+      </section>
+      <section class="evaluation-card evaluation-good">
+        <p class="evaluation-label">Chosen approach</p>
+        <h4>Specialised classes keep the pipeline understandable</h4>
+        <p>Biome selection, control-map generation and decoration placement are separated instead of remaining inside one 1,100-line class. This makes changes easier to test and explain.</p>
+      </section>
+      <section class="evaluation-card evaluation-good">
+        <p class="evaluation-label">Chosen approach</p>
+        <h4>CPU generation and GPU rendering have clear roles</h4>
+        <p>The CPU prepares world data and compact texture weights; the shader handles detailed per-pixel blending. This division keeps the terrain flexible without rebuilding geometry for every visual change.</p>
+      </section>
+    </div>
 
+    <h3>One logical next refinement</h3>
+    <div class="callout">
+      The most useful next step is profiling the complete pipeline on the intended target hardware. That will show
+      whether shader sampling, runtime textures or decoration GameObjects deserve optimisation first, instead of
+      changing parts of the system based only on assumptions.
+    </div>
+
+    <h3>Research question</h3>
     <p>
-      Generating believable terrain procedurally is not straightforward. Pure randomness results
-      in chaotic and unrealistic landscapes, while more structured approaches introduce complexity
-      and performance challenges.
+      How can coherent noise be transformed into a varied, textured and continuously generated Unity world,
+      and which design choices make that pipeline understandable and usable in real time?
     </p>
 
-    <p>
-      The main challenge is to create a system that is both visually coherent and efficient enough
-      to run in real time. As the world becomes larger and more complex, the number of calculations
-      increases rapidly, which can lead to performance issues such as frame drops or lag spikes.
-    </p>
-
-    <!-- RESEARCH QUESTION -->
-    <h3>Main Question</h3>
-
-    <p>
-      How can procedural terrain be generated using Perlin noise, and what techniques can be used
-      to improve its performance in Unity?
-    </p>
-
-    <!-- SUB QUESTIONS -->
-    <h3>Sub Questions</h3>
-
-    <p>
-      1. What is Perlin noise and how do parameters such as scale, octaves, persistence, and lacunarity influence the result?<br>
-      2. How can Perlin noise be used to generate a structured terrain or biome map?<br>
-      3. What performance challenges occur when generating large procedural worlds in real time?<br>
-      4. What techniques can be used to improve the performance of procedural generation in Unity?
-    </p>
-
-    <!-- APPROACH -->
-    <h3>Approach</h3>
-
-    <p>
-      This project is structured as a sequence of steps. Each step builds on the previous one,
-      gradually transforming abstract noise values into a complete procedural world generation system.
-    </p>
-
-    <p>
-      It starts with generating basic noise, then adds multiple layers to increase complexity,
-      interprets these values as terrain, combines multiple maps into biomes, and finally applies
-      the result inside Unity.
-    </p>
-
-    <p>
-      After building the system, performance limitations are analysed and optimized using techniques
-      such as chunk-based generation, level of detail, and multithreading.
-    </p>
-
-  </div>
+    <h3>Recommended evidence</h3>
+    <div class="double-preview">
+      <div class="project-image" data-src="images/final-biome-closeup.png" data-alt="Close-up of the final terrain textures and biome transitions">
+        <div class="image-placeholder">
+          <span>Add a close-up screenshot</span>
+          <strong>images/final-biome-closeup.png</strong>
+          <small>Show at least three visible biome textures.</small>
+        </div>
+      </div>
+      <div class="project-image" data-src="images/final-world-overview.png" data-alt="Wide final terrain overview">
+        <div class="image-placeholder">
+          <span>Add a wide result screenshot</span>
+          <strong>images/final-world-overview.png</strong>
+          <small>Show chunk continuity and distant terrain.</small>
+        </div>
+      </div>
+    </div>
+  </article>
 </details>

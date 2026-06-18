@@ -1,282 +1,83 @@
 <details class="step-wrapper" open>
-  <summary class="step-summary">Step 3: From Noise to Terrain Shapes</summary>
-
-  <div class="step-card">
-    <h3>Goal of This Step</h3>
-
-    <p>
-      The previous steps focused on generating structured noise and controlling
-      its appearance through parameters such as scale, octaves, persistence, and
-      lacunarity. At that point, the system could already produce useful data,
-      but that data was still abstract. It existed only as grayscale values.
+  <summary class="step-summary">Step 3: Interpreting height and building a mesh</summary>
+  <article class="step-card">
+    <p class="section-kicker">From values to geometry</p>
+    <p class="lead">
+      A normalized height map becomes useful when each value is converted into a vertex height. The same values can
+      also be divided into readable regions such as water, coast, land and mountain.
     </p>
 
+    <h3>Height ranges are the first classification layer</h3>
     <p>
-      This step mainly addresses <strong>sub question 2</strong>: how Perlin
-      noise can be used to generate a structured terrain or biome map. The first
-      part of that answer is learning how to interpret raw noise values as
-      terrain categories.
-    </p>
-
-    <h3>Why This Step Was Needed</h3>
-
-    <p>
-      A grayscale noise map is useful for understanding the internal structure
-      of the data, but it is not yet very meaningful as terrain. A player or
-      developer cannot immediately read black, gray, and white values as ocean,
-      land, or mountain unless those values are translated into terrain types.
-    </p>
-
-    <p>
-      That is why this step is necessary. Instead of treating the generated
-      values as abstract intensity, the system now starts interpreting them as
-      height. Once the values are seen as height, they can be divided into
-      ranges that represent different parts of the landscape.
-    </p>
-
-    <p>
-      This is an important shift in the project. The noise map is no longer only
-      a mathematical output, but the beginning of an actual terrain model.
-    </p>
-
-    <h3>Why Thresholds Were Chosen</h3>
-
-    <p>
-      The simplest and most controllable way to convert height values into
-      terrain categories is by using thresholds. A threshold is a boundary value
-      that determines when one terrain type changes into another.
-    </p>
-
-    <p>
-      This method was chosen because it is easy to understand, easy to tune, and
-      works well with procedurally generated data. By adjusting only a few
-      threshold values, the world can quickly become more ocean-heavy, more
-      mountainous, or more land-based.
-    </p>
-
-    <p>
-      Other approaches could be used, such as continuous biome blending or more
-      advanced classification systems, but thresholds are a strong first step
-      because they make the data much easier to interpret while keeping the
-      system simple.
-    </p>
-
-    <h3>How Height Thresholds Work</h3>
-
-    <p>
-      The noise map contains values between 0 and 1 after normalization. On
-      their own, these values do not yet describe what type of terrain a
-      position should represent. A threshold-based system assigns meaning to
-      those values by splitting them into ranges.
-    </p>
-
-    <p>
-      For example, low values can represent water, medium values can represent
-      land, and high values can represent mountains. This means that one single
-      noise map can already be transformed into a readable terrain layout.
-    </p>
-
-    <p>
-      In this project, the thresholds are used like this:
-    </p>
-
-    <p>
-      - values below 0.35 represent water<br />
-      - values between 0.35 and 0.42 represent beach<br />
-      - values between 0.42 and 0.70 represent grass or land<br />
-      - values above 0.70 represent mountain
-    </p>
-
-    <p>
-      These exact values are not fixed rules. They are design choices that can
-      be adjusted depending on the type of world that is needed.
-    </p>
-
-    <h3>Why This Improves the System</h3>
-
-    <p>
-      Interpreting noise values as terrain makes the output much more useful.
-      Instead of only seeing a pattern, it becomes possible to understand the
-      generated world as a landscape with recognizable regions.
-    </p>
-
-    <p>
-      This also creates a much stronger base for later steps. Once height values
-      are translated into terrain categories, the same information can later be
-      reused for biome systems, mesh generation, and object placement.
-    </p>
-
-    <h3>How This Works in Unity</h3>
-
-    <p>
-      In Unity, this is done by looping over every position in the generated map
-      and checking which height range the value belongs to. A color is then
-      assigned based on that range.
-    </p>
-
-    <div class="code-block">
-      <pre><code>for (int y = 0; y < mapHeight; y++)
-{
-    for (int x = 0; x < mapWidth; x++)
-    {
-        float currentHeight = noiseMap[x, y];
-
-        if (currentHeight < 0.35f)
-        {
-            colorMap[y * mapWidth + x] = Color.blue;
-        }
-        else if (currentHeight < 0.42f)
-        {
-            colorMap[y * mapWidth + x] = new Color(0.9f, 0.85f, 0.6f);
-        }
-        else if (currentHeight < 0.70f)
-        {
-            colorMap[y * mapWidth + x] = Color.green;
-        }
-        else
-        {
-            colorMap[y * mapWidth + x] = Color.gray;
-        }
-    }
-}</code></pre>
-    </div>
-
-    <h3>What This Code Does</h3>
-
-    <p>
-      The code checks the height value at every coordinate and compares it to a
-      set of threshold values. Depending on which range the height falls into, a
-      different terrain color is assigned.
-    </p>
-
-    <p>
-      This means the map is no longer displayed as raw grayscale data. Instead,
-      the generated values are translated into terrain regions that are much
-      easier to read and reason about.
-    </p>
-
-    <p>
-      The thresholds also act as simple control points. Raising the water
-      threshold will increase the amount of ocean, while lowering it will expose
-      more land. In the same way, changing the mountain threshold changes how
-      much of the world is considered high terrain.
-    </p>
-
-    <p>
-      This directly contributes to sub question 2, because it shows one of the
-      first practical ways in which Perlin noise can be transformed from raw
-      mathematical data into a structured terrain map.
-    </p>
-
-    <h3>Interactive Demo</h3>
-
-    <p>
-      The demo below shows how a noise map can be interpreted as terrain by
-      applying thresholds. Instead of only changing the structure of the noise,
-      this step changes the meaning of the generated values.
+      Earlier versions used fixed color thresholds. The current biome system is more flexible, but the principle is
+      still important: height is one of the three ranges every biome must satisfy. Low height can represent water,
+      middle values can represent plains or forest, and high values can represent mountain or snow.
     </p>
 
     <details class="demo-wrapper" open>
-      <summary class="demo-summary">Show demo</summary>
-
+      <summary class="demo-summary">Interactive height classification demo</summary>
       <div class="demo-content">
         <div class="demo-layout">
           <div class="controls">
-            <label>Noise Scale: <span id="scale3Value">80</span></label>
-            <input id="noiseScale3" type="range" min="5" max="200" value="80" />
-
-            <label>Octaves: <span id="octaves3Value">4</span></label>
-            <input id="octaves3" type="range" min="1" max="8" value="4" />
-
-            <label>Persistence: <span id="persistence3Value">0.50</span></label>
-            <input
-              id="persistence3"
-              type="range"
-              min="0.1"
-              max="1"
-              step="0.05"
-              value="0.5"
-            />
-
-            <label>Lacunarity: <span id="lacunarity3Value">2.00</span></label>
-            <input
-              id="lacunarity3"
-              type="range"
-              min="1"
-              max="4"
-              step="0.1"
-              value="2"
-            />
-
-            <label>
-              Water Threshold:
-              <span id="waterThresholdValue">0.35</span>
-            </label>
-            <input
-              id="waterThreshold"
-              type="range"
-              min="0.05"
-              max="0.60"
-              step="0.01"
-              value="0.35"
-            />
-
-            <label>
-              Beach Threshold:
-              <span id="beachThresholdValue">0.42</span>
-            </label>
-            <input
-              id="beachThreshold"
-              type="range"
-              min="0.10"
-              max="0.70"
-              step="0.01"
-              value="0.42"
-            />
-
-            <label>
-              Mountain Threshold:
-              <span id="mountainThresholdValue">0.70</span>
-            </label>
-            <input
-              id="mountainThreshold"
-              type="range"
-              min="0.40"
-              max="0.95"
-              step="0.01"
-              value="0.70"
-            />
-
-            <button id="generateNoiseButton3">Generate Map</button>
+            <div class="control-row">
+              <label for="noiseScale3">Scale <span id="scale3Value" class="control-value">85</span></label>
+              <input id="noiseScale3" type="range" min="10" max="220" value="85">
+            </div>
+            <div class="control-row">
+              <label for="waterThreshold3">Water end <span id="water3Value" class="control-value">0.32</span></label>
+              <input id="waterThreshold3" type="range" min="0.10" max="0.55" step="0.01" value="0.32">
+            </div>
+            <div class="control-row">
+              <label for="beachThreshold3">Beach end <span id="beach3Value" class="control-value">0.39</span></label>
+              <input id="beachThreshold3" type="range" min="0.15" max="0.65" step="0.01" value="0.39">
+            </div>
+            <div class="control-row">
+              <label for="mountainThreshold3">Mountain start <span id="mountain3Value" class="control-value">0.72</span></label>
+              <input id="mountainThreshold3" type="range" min="0.45" max="0.92" step="0.01" value="0.72">
+            </div>
+            <button id="generateStep3Button" type="button">New seed</button>
           </div>
-
           <div class="preview">
-            <canvas id="noiseCanvas3" width="400" height="400"></canvas>
+            <canvas id="noiseCanvas3" class="demo-canvas" width="360" height="360" aria-label="Terrain height classification preview"></canvas>
           </div>
         </div>
       </div>
     </details>
 
-    <h3>What This Step Adds to the System</h3>
+    <h3>Mesh generation</h3>
+    <div class="code-block"><pre><code>meshData.vertices[vertexIndex] = new Vector3(
+    topLeftX + x,
+    heightCurve.Evaluate(heightMap[x, y]) * heightMultiplier,
+    topLeftZ - y
+);</code></pre></div>
 
     <p>
-      This step transforms the project from procedural pattern generation into
-      procedural terrain interpretation. The generated noise is no longer only a
-      technical output, but becomes a readable landscape made up of water,
-      coast, land, and mountains.
+      The x and z values place vertices on a regular grid. The y value comes from the height map after an
+      <code>AnimationCurve</code> and multiplier are applied. The curve is useful because it can flatten low terrain
+      while making high values steeper without regenerating the noise itself.
     </p>
 
+    <h3>Why the chunk size is 241</h3>
     <p>
-      That makes this step a major bridge between sub question 1 and sub
-      question 2. The earlier steps explained how Perlin noise works and how its
-      parameters influence the pattern, while this step shows how those values
-      can be turned into the first structured version of a terrain map.
+      The mesh generator skips vertices based on the selected LOD. A chunk size of 241 means the usable interval is
+      240, which is divisible by several simplification increments. That allows multiple LOD meshes to line up with
+      the same chunk boundaries.
     </p>
 
-    <p>
-      In the next step, this idea is extended further by adding a second map.
-      Instead of using only height, the system will also use temperature, which
-      makes it possible to create more varied biome types.
-    </p>
-  </div>
+    <div class="project-image" data-src="images/terrain-wireframe-lod.png" data-alt="Unity terrain shown as a wireframe at two levels of detail">
+      <div class="image-placeholder">
+        <span>Recommended comparison image</span>
+        <strong>images/terrain-wireframe-lod.png</strong>
+        <small>Place a high-detail and low-detail wireframe next to each other.</small>
+      </div>
+    </div>
+
+    <h3>Why a generated height-field mesh was chosen</h3>
+    <div class="evaluation-grid">
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with Unity Terrain</p><h4>The project keeps direct control over chunk meshes</h4><p>Custom meshes fit naturally with the existing chunk, LOD and threading pipeline and make every generation step visible in code.</p></section>
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with voxel terrain</p><h4>It is simpler and cheaper for an outdoor landscape</h4><p>A regular height field needs one height per x/z coordinate, which is efficient for hills, plains, mountains and large viewing distances.</p></section>
+      <section class="evaluation-card evaluation-good"><p class="evaluation-label">Compared with a fixed imported mesh</p><h4>It can be regenerated from the seed</h4><p>The world does not need to be modelled or stored in advance, and the same source data can produce several LOD versions.</p></section>
+      <section class="evaluation-card evaluation-limit"><p class="evaluation-label">When another option would be better</p><h4>Voxels or volumetric meshes are needed for caves</h4><p>The chosen height-field method is ideal for the current surface world. A game centred on tunnels, overhangs or destructible terrain would justify a more complex geometry representation.</p></section>
+    </div>
+  </article>
 </details>

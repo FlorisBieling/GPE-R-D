@@ -1,236 +1,138 @@
 <details class="step-wrapper" open>
-  <summary class="step-summary">Step 7: Performance Techniques</summary>
-
-  <div class="step-card">
-    <h3>Goal of This Step</h3>
-
-    <p>
-      The previous step showed that procedural world generation can become
-      expensive when multiple systems are combined. Generating terrain data,
-      building meshes, and placing many objects all increase the workload,
-      especially when this has to happen continuously during gameplay.
+  <summary class="step-summary">Step 7: Custom URP shader and Asset Store texture workflow</summary>
+  <article class="step-card">
+    <p class="section-kicker">GPU rendering</p>
+    <p class="lead">
+      The terrain does not use one ready-made material per biome. The source textures came from the
+      <a href="https://assetstore.unity.com/packages/2d/textures-materials/nature/yughues-free-ground-materials-13001" target="_blank" rel="noreferrer">Yughues Free Ground Materials</a>
+      package on the Unity Asset Store. Selected texture sets were combined in one custom URP shader so every chunk can use the same material while the control maps determine the local result.
     </p>
 
+    <h3>Why one custom shader was chosen</h3>
     <p>
-      This step mainly answers <strong>sub question 4</strong>: what techniques
-      can be used to improve the performance of procedural generation in Unity.
-      Instead of focusing on one single solution, this step introduces multiple
-      optimization strategies that reduce the total cost from different angles.
+      Several approaches were possible. Separate materials per biome would require submeshes or hard material borders.
+      Shader Graph could provide a visual workflow, but a seven-layer blend with custom control-map channels becomes
+      large and harder to document precisely. A custom HLSL shader was chosen because it gives direct control over the
+      channel layout, world-space sampling and lighting while keeping every chunk on one material system.
     </p>
 
-    <h3>Why Multiple Techniques Are Needed</h3>
-
-    <p>
-      There is usually no single change that solves all performance problems in
-      procedural generation. Some optimizations reduce how much data is
-      generated, others reduce how often work is done, and others reduce how
-      detailed the result needs to be.
-    </p>
-
-    <p>
-      This is why performance improvements are best approached as a combination
-      of techniques. In this project, the goal is not only to make generation
-      faster, but also to keep the system scalable and usable in larger Unity
-      projects.
-    </p>
-
-    <h3>Reducing Unnecessary Work</h3>
-
-    <p>
-      One of the simplest ways to improve performance is to reduce how much work
-      the system performs in the first place. If some calculations do not
-      significantly improve the final result, they can often be simplified,
-      delayed, or skipped.
-    </p>
-
-    <p>
-      Examples of this include:
-    </p>
-
-    <p>
-      - using fewer octaves for less important data<br />
-      - lowering resolution for distant terrain<br />
-      - avoiding calculations for areas that are not currently needed
-    </p>
-
-    <p>
-      This approach was relevant for this project because the cost of procedural
-      generation grows quickly as the world expands. Preventing unnecessary work
-      is often more effective than trying to optimize every calculation
-      individually.
-    </p>
-
-    <h3>Chunk-Based Generation</h3>
-
-    <p>
-      A major optimization used in this project is chunk-based generation.
-      Instead of generating the entire world at once, the terrain is divided
-      into smaller sections called chunks. Each chunk can be generated,
-      displayed, and updated independently.
-    </p>
-
-    <div class="code-block">
-      <pre><code>terrainChunkDictionary.Add(
-    viewedChunkCoord,
-    new TerrainChunk(
-        viewedChunkCoord,
-        chunkSize,
-        detailLevels,
-        transform,
-        mapMaterial
-    )
-);</code></pre>
+    <div class="evaluation-grid">
+      <section class="evaluation-card evaluation-good">
+        <p class="evaluation-label">Compared with separate materials</p>
+        <h4>One material can render the complete terrain</h4>
+        <p>The mesh does not need to be divided by biome, and transitions are handled per pixel rather than at geometry boundaries.</p>
+      </section>
+      <section class="evaluation-card evaluation-good">
+        <p class="evaluation-label">Compared with local mesh UVs</p>
+        <h4>World-space sampling keeps chunks visually continuous</h4>
+        <p>Using <code>positionWS.xz</code> means the texture pattern continues across neighbouring chunks instead of restarting at every local origin.</p>
+      </section>
+      <section class="evaluation-card evaluation-good">
+        <p class="evaluation-label">Compared with a large Shader Graph</p>
+        <h4>The blending rules are explicit and reusable</h4>
+        <p>The relationship between control-map channels and biome textures is visible in code, easy to version and straightforward to explain in the research documentation.</p>
+      </section>
+      <section class="evaluation-card evaluation-limit">
+        <p class="evaluation-label">Future refinement</p>
+        <h4>Optimise only after measuring the target platform</h4>
+        <p>Custom HLSL gives full control, but also makes the project responsible for later improvements such as reducing inactive texture samples or adding slope-aware mapping.</p>
+      </section>
     </div>
 
+    <h3>Texture sets used in the material</h3>
     <p>
-      This technique was chosen because it fits procedural terrain generation
-      very well. Only the chunks near the player need to be active, while distant
-      areas can remain unloaded. This reduces both memory usage and the amount
-      of work the system has to do at runtime.
+      Each biome uses an albedo texture (<code>_d</code>), a normal map (<code>_n</code>) and a specular map
+      (<code>_s</code>). The editor utility searches for the exact Asset Store texture names and assigns them to the custom material.
     </p>
 
-    <h3>Level of Detail</h3>
-
-    <p>
-      Not every part of the world needs the same level of detail. Terrain close
-      to the player benefits from high resolution, but distant terrain can often
-      be simplified without the difference being very noticeable.
-    </p>
-
-    <p>
-      To handle this, the project uses levels of detail. Nearby chunks use more
-      detailed meshes, while distant chunks use simpler versions.
-    </p>
-
-    <div class="code-block">
-      <pre><code>if (viewerDstFromNearestEdge > detailLevels[i].visibleDistanceThreshold)
-{
-    lodIndex = i + 1;
-}</code></pre>
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead><tr><th>Shader biome</th><th>Source texture base name</th><th>Reason for this choice</th></tr></thead>
+        <tbody>
+          <tr><td>Water</td><td><code>T_YFGM_FrozenGrass</code></td><td>A stylised blue-green surface that fits the current terrain palette and lets water participate in the same control-map workflow. A dedicated water shader remains an optional later upgrade.</td></tr>
+          <tr><td>Beach</td><td><code>T_YFGM_Mars</code></td><td>Its warm, fine-grained ground pattern reads clearly as a shoreline beside the colder water and greener land textures.</td></tr>
+          <tr><td>Plains</td><td><code>T_YFGM_Grass06</code></td><td>A readable general grass texture for open terrain.</td></tr>
+          <tr><td>Forest</td><td><code>T_YFGM_Grass01</code></td><td>A darker grass variation helps distinguish wetter or denser regions.</td></tr>
+          <tr><td>Desert</td><td><code>T_YFGM_Dry01</code></td><td>A direct match for dry terrain.</td></tr>
+          <tr><td>Mountain</td><td><code>T_YFGM_GroundStones02</code></td><td>Stone detail fits high, exposed terrain.</td></tr>
+          <tr><td>Snow</td><td><code>T_YFGM_Snow</code></td><td>Uses the package snow maps when present; the assignment tool falls back to white albedo, a flat normal and black specular when files are missing.</td></tr>
+        </tbody>
+      </table>
     </div>
 
-    <p>
-      This reduces the number of vertices and triangles that Unity has to
-      process. It was a logical choice for this project because the world is
-      intended to scale across multiple chunks, making distant terrain otherwise
-      unnecessarily expensive.
-    </p>
+    <h3>How the shader combines the textures</h3>
+    <div class="code-block"><pre><code>float waterWeight = controlA.r;
+float beachWeight = controlA.g;
+float plainsWeight = controlA.b;
+float forestWeight = controlA.a;
+float desertWeight = controlB.r;
+float mountainWeight = controlB.g;
+float snowWeight = controlB.b;
 
-    <h3>Smarter Object Placement</h3>
-
-    <p>
-      Another important technique is reducing the cost of decoration placement.
-      In Step 6, object instantiation was identified as one of the main
-      bottlenecks. Because of this, object placement needed to become more
-      selective.
-    </p>
+albedo += SampleAlbedo(_WaterTex, waterUV) * waterWeight;
+albedo += SampleAlbedo(_BeachTex, beachUV) * beachWeight;
+// The same pattern continues for plains, forest, desert, mountain and snow.
+albedo /= totalWeight;</code></pre></div>
 
     <p>
-      Instead of checking every position equally, additional rules can be used
-      to lower the number of spawn attempts and the number of final objects.
+      The same normalized weights are applied to albedo, tangent-space normal and specular samples. The resulting normal
+      is converted to world space, then the shader calculates main-light diffuse, a custom specular highlight, spherical-harmonic ambient light, shadows and fog.
     </p>
 
-    <p>
-      These rules include:
-    </p>
-
-    <p>
-      - sampling at intervals instead of every tile<br />
-      - applying spawn chances<br />
-      - checking biome conditions before spawning<br />
-      - enforcing minimum distance between objects
-    </p>
-
-    <div class="code-block">
-      <pre><code>if (x % sampleInterval != 0 || y % sampleInterval != 0)
-{
-    continue;
-}</code></pre>
+    <h3>Why albedo, normal and specular maps are all used</h3>
+    <div class="card-grid">
+      <section class="card"><h4>Albedo</h4><p>Provides the visible base color and large surface pattern.</p></section>
+      <section class="card"><h4>Normal</h4><p>Adds small lighting detail without adding more terrain vertices.</p></section>
+      <section class="card"><h4>Specular</h4><p>Controls where the custom highlight is stronger or weaker.</p></section>
+      <section class="card"><h4>Per-biome scale</h4><p>Lets every source texture use a different world-space tiling frequency.</p></section>
     </div>
 
-    <p>
-      This was a good fit for the project because decoration is visually useful,
-      but it should not be allowed to dominate the total generation cost.
-      Sampling intervals and spawn rules help reduce object count while keeping
-      the world visually varied.
-    </p>
-
-    <h3>Spreading Work Over Time</h3>
-
-    <p>
-      Even when the total amount of work cannot be fully reduced, performance
-      can still improve by spreading that work over multiple frames. Instead of
-      doing everything at once, the system performs part of the work
-      incrementally.
-    </p>
-
-    <p>
-      This is especially useful for object placement. Creating many GameObjects
-      in a single frame causes visible lag spikes, while spawning them gradually
-      reduces those spikes.
-    </p>
-
-    <div class="code-block">
-      <pre><code>while (nextDecorationSpawnIndex < pendingDecorationData.Length &&
-       spawnedThisFrame < decorationsPerFrame)
-{
-    // spawn objects gradually
-}</code></pre>
+    <h3>Technical strengths and the next useful improvement</h3>
+    <div class="evaluation-grid">
+      <section class="evaluation-card evaluation-good">
+        <p class="evaluation-label">Rendering strength</p>
+        <h4>Albedo, normal and specular use the same biome weights</h4>
+        <p>Every material property changes together across biome boundaries, so transitions remain visually consistent instead of blending only the base color.</p>
+      </section>
+      <section class="evaluation-card evaluation-good">
+        <p class="evaluation-label">URP integration</p>
+        <h4>Lighting, shadows, ambient light and fog are included</h4>
+        <p>The shader is integrated into the scene rather than acting as an unlit texture mixer, which makes the generated terrain respond to the world lighting.</p>
+      </section>
+      <section class="evaluation-card evaluation-good">
+        <p class="evaluation-label">Implementation quality</p>
+        <h4>Material values use one <code>UnityPerMaterial</code> CBUFFER</h4>
+        <p>This follows the structure expected by SRP Batcher-compatible custom URP shaders and keeps material properties organised.</p>
+      </section>
+      <section class="evaluation-card evaluation-limit">
+        <p class="evaluation-label">Most relevant future improvement</p>
+        <h4>Reduce sampling cost and improve steep slopes when needed</h4>
+        <p>The current shader samples all seven albedo, normal and specular sets and uses XZ planar mapping. Profiling may justify dominant-layer shortcuts, texture arrays or triplanar mapping; the unused <code>_ColorMap</code> property can then be removed or deliberately integrated.</p>
+      </section>
     </div>
 
-    <p>
-      This technique was particularly relevant in this project because the
-      largest observed problem was not only the total cost, but the sudden peak
-      in cost when many objects were instantiated at once.
-    </p>
+    <h3>How texture assignment works</h3>
+    <ol class="clean-list">
+      <li>Import <strong>Yughues Free Ground Materials</strong> from the Unity Asset Store into your own project.</li>
+      <li>Create or select the material that uses <code>Custom/ProceduralBiomeTexturesURP</code>.</li>
+      <li>Place <code>AssignExactYFGMBiomeTextures_Final.cs</code> in an <code>Editor</code> folder.</li>
+      <li>Run <code>Tools → Procedural Terrain → Assign Final YFGM Textures</code>.</li>
+      <li>The utility finds textures by exact asset name and fills the shader properties.</li>
+    </ol>
 
-    <h3>Separating Data Generation from Unity-Specific Work</h3>
+    <div class="callout callout-warning">
+      <strong>Asset Store licensing:</strong> the downloadable project package does not include the raw Yughues texture files.
+      They are licensed through the Unity Asset Store and should be imported by each user through the official package page.
+      The download contains the custom shader, material snapshot, assignment utility and project scripts only.
+    </div>
 
-    <p>
-      Another useful optimization strategy is separating calculation from
-      application. Many parts of procedural generation only operate on data, such
-      as generating noise values, determining biome types, or preparing spawn
-      positions. These steps do not necessarily require direct interaction with
-      Unity objects.
-    </p>
-
-    <p>
-      By separating this data processing from rendering and object creation, the
-      system becomes easier to optimize. This idea also prepares the project for
-      multithreading, which is explored in the next step.
-    </p>
-
-    <h3>Why These Techniques Fit This Project</h3>
-
-    <p>
-      These optimizations were not chosen randomly. They fit the structure of
-      this project because the generator is intended to become a reusable Unity
-      tool, potentially even as an Asset Store package. That means the system
-      should not only work in one small demo scene, but remain practical in
-      larger and more demanding environments.
-    </p>
-
-    <p>
-      Chunking helps scale the terrain, level of detail reduces rendering cost,
-      smarter spawning reduces decoration overhead, and incremental processing
-      prevents major lag spikes. Together, these techniques make the system much
-      more suitable for real-time use.
-    </p>
-
-    <h3>What This Step Adds to the System</h3>
-
-    <p>
-      This step expands the project from identifying performance problems to
-      actively addressing them. It shows that procedural generation does not
-      become usable in practice through one optimization, but through a
-      collection of strategies that reduce different kinds of workload.
-    </p>
-
-    <p>
-      This directly contributes to sub question 4 by showing several practical
-      techniques for improving performance in Unity. In the next step, one of
-      the most important of these techniques is discussed in more detail:
-      multithreading.
-    </p>
-  </div>
+    <div class="double-preview">
+      <div class="project-image" data-src="images/unity-architecture-materials.png" data-alt="Unity Materials folder containing the terrain material shader and assignment utility">
+        <div class="image-placeholder"><span>Use the supplied Materials-folder screenshot</span><strong>images/unity-architecture-materials.png</strong><small>Show the material, shader and current assignment script.</small></div>
+      </div>
+      <div class="project-image" data-src="images/shader-material-inspector.png" data-alt="Unity material Inspector showing the seven biome texture sets">
+        <div class="image-placeholder"><span>Add a material Inspector screenshot</span><strong>images/shader-material-inspector.png</strong><small>Show albedo, normal, specular and scale fields for several biomes.</small></div>
+      </div>
+    </div>
+  </article>
 </details>
