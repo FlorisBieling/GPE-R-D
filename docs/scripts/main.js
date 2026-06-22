@@ -31,14 +31,21 @@ function initializeProjectImages(root = document) {
 
     container.dataset.initialized = "true";
     const image = new Image();
-    image.loading = "lazy";
+    image.className = "project-image-pending";
+    image.loading = container.classList.contains("hero-media") ? "eager" : "lazy";
     image.decoding = "async";
     image.alt = container.dataset.alt || "Project image";
 
     image.addEventListener("load", () => {
+      image.classList.remove("project-image-pending");
       container.replaceChildren(image);
     });
 
+    image.addEventListener("error", () => {
+      image.remove();
+    });
+
+    container.appendChild(image);
     image.src = container.dataset.src;
   });
 }

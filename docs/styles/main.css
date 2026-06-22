@@ -276,6 +276,7 @@ code {
 
 .hero-media,
 .project-image {
+  position: relative;
   min-height: 20rem;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -290,6 +291,13 @@ code {
   min-height: inherit;
   display: block;
   object-fit: cover;
+}
+
+.project-image img.project-image-pending {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .image-placeholder {
