@@ -32,7 +32,7 @@ function initializeProjectImages(root = document) {
     container.dataset.initialized = "true";
     const image = new Image();
     image.className = "project-image-pending";
-    image.loading = container.classList.contains("hero-media") ? "eager" : "lazy";
+    image.loading = "eager";
     image.decoding = "async";
     image.alt = container.dataset.alt || "Project image";
 

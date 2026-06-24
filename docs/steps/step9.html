@@ -68,8 +68,8 @@ int verticesPerLine = (width - 1) / meshSimplificationIncrement + 1;</code></pre
     <div class="architecture-gallery">
       <div class="project-image" data-src="images/unity-architecture-root.png" data-alt="Unity Assets Perlin root folder"><div class="image-placeholder"><span>Use supplied root-folder screenshot</span><strong>images/unity-architecture-root.png</strong><small>Materials, Scripts and the Perlin scene.</small></div></div>
       <div class="project-image" data-src="images/unity-architecture-materials.png" data-alt="Unity Materials folder"><div class="image-placeholder"><span>Use supplied Materials screenshot</span><strong>images/unity-architecture-materials.png</strong><small>Material, shader and editor assignment utility.</small></div></div>
-      <div class="project-image" data-src="images/unity-architecture-scripts.png" data-alt="Unity Scripts folder"><div class="image-placeholder"><span>Use supplied Scripts screenshot</span><strong>images/unity-architecture-scripts.png</strong><small>Terrain scripts and Camera folder.</small></div></div>
       <div class="project-image" data-src="images/unity-architecture-camera.png" data-alt="Unity camera scripts folder"><div class="image-placeholder"><span>Use supplied Camera screenshot</span><strong>images/unity-architecture-camera.png</strong><small>Movement and height-control scripts.</small></div></div>
+      <div class="project-image architecture-gallery-wide" data-src="images/unity-architecture-scripts.png" data-alt="Unity Scripts folder"><div class="image-placeholder"><span>Use supplied Scripts screenshot</span><strong>images/unity-architecture-scripts.png</strong><small>Terrain scripts and Camera folder.</small></div></div>
     </div>
 
     <h3>Why this folder structure was chosen</h3>
@@ -127,7 +127,7 @@ int verticesPerLine = (width - 1) / meshSimplificationIncrement + 1;</code></pre
       <section class="evaluation-card evaluation-limit"><p class="evaluation-label">Next scalability step</p><h4>Use a bounded job scheduler when request volume grows</h4><p>Raw threads are easy to understand and suitable for the current project. Unity Jobs, Tasks or a thread pool would become preferable if many chunks request work simultaneously.</p></section>
     </div>
 
-    <div class="project-image" data-src="images/runtime-chunks-lod.png" data-alt="Unity scene view showing terrain chunks and several levels of detail">
+    <div class="project-image project-image-square" data-src="images/runtime-chunks-lod.png" data-alt="Unity scene view showing terrain chunks and several levels of detail">
       <div class="image-placeholder">
         <span>Recommended architecture evidence</span>
         <strong>images/runtime-chunks-lod.png</strong>
